@@ -3,9 +3,10 @@ title: "Growth Motility Summary"
 output: pdf_document
 ---
 
- This notebook is a summary across existing data sets for surface motility. First, load the necessary:
+This notebook is a summary across existing data sets for surface motility. First, load the necessary:
 ```{r}
-pacman::p_load(readxl, tidyverse, cowplot, RColorBrewer, growthrates, growthcurver, ggpubr)
+pacman::p_load(tidyverse, cowplot, vegan, FactoMineR, readxl, ggpubr, MASS, RColorBrewer,
+               readxl, growthrates, growthcurver)
 ```
  
 Define global:
