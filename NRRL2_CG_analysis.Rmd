@@ -280,7 +280,9 @@ max(NRRLMulti2$varTotal) #nope - at most one kind of variant per community*repli
 Plot Fig 1 with the joint ordination
 ```{r}
 plot_grid(pMultiPlotsTop_Merge, pVariantEmergenceHeat, ncol=1, rel_heights = c(2,1), labels=c("", "D"))
-ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.png", width=10, height=12, units="in", dpi=400)
+#ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.png", width=10, height=12, units="in", dpi=400)
+ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.tiff", width=240, height=275, units="mm")
+# 2/3 page width is 114 mm - supplied at 2X size
 ```
 
 ## Variant Emergence vs. Diversity (SI Figure)
@@ -1461,7 +1463,9 @@ pCG_Compete<-plot_grid(pCG_Compete_AB,
                        labels=c("", ""))
 
 pCG_Compete
-ggsave("Fig2_CG_Compete.png", width=14, height=7, units="in", dpi=400)
+#ggsave("Fig2_CG_Compete.png", width=14, height=7, units="in", dpi=400)
+ggsave("Fig2_CG_Compete.tiff", width=336, height=168, units="mm")
+# full page width = 168 mm
 ```
 
 
@@ -1826,7 +1830,9 @@ pCGMotilitySummary<-plot_grid(pmotility_agarconc_LastDay,
 #                              rep.35A.day1p8.facet, rep.35F.day1p8.facet,
 #                              ncol=3, rel_widths=c(1, 0.4, 0.5), labels="AUTO")
 pCGMotilitySummary
-ggsave("Fig3_pCGMotilitySummary.png", width=10, height=8, units="in", dpi=400)
+#ggsave("Fig3_pCGMotilitySummary.png", width=10, height=8, units="in", dpi=400)
+ggsave("Fig3_pCGMotilitySummary.tiff", width=228, height=182, units="mm")
+# 2/3 page 114 mm width
 ```
 
 
@@ -2386,7 +2392,9 @@ pNutrientMotility<-plot_grid(p_nd_diam_lmlines_log_short,
           #labels=c("D", "E", "F")
           )
 pNutrientMotility
-ggsave("Fig4_NutrientMotility.png", width=8, height=12, units="in", dpi=400)
+#ggsave("Fig4_NutrientMotility.png", width=8, height=12, units="in", dpi=400)
+ggsave("Fig4_NutrientMotility.tiff", width=160, height=240, units="mm")
+# one column 80 mm width
 ```
 
 
