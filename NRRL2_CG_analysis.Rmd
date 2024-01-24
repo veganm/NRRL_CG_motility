@@ -3,11 +3,31 @@ title: "NRRL2 CG Analysis"
 output: pdf_document
 ---
 
-This notebook contains all the code for the manuscript. 
+This notebook contains all the code for the manuscript. Code was written in R 4.3.1-4.3.2
 
 # Globals
 First, load the necessary:
 ```{r}
+# betareg 3.1-4
+# cowplot 1.1.2
+# deSolve 1.40
+# dplyr 1.1.4
+# FactoMineR 2.9
+# forcats 1.0.0
+# ggplot2 3.4.4
+# ggpubr 0.6.0
+# growthcurver 0.3.1
+# growthrates 0.8.4
+# patchwork 1.1.3
+# purrr 1.0.2
+# RColorBrewer 1.1-3
+# readxl 1.4.3
+# stringr 1.5.1
+# tibble 3.2.1
+# tidyr 1.3.0
+# tidyverse 2.0.0
+# vegan 2.6-4
+# MASS 7.3-60
 pacman::p_load(tidyverse, cowplot, vegan, FactoMineR, readxl, ggpubr, MASS, RColorBrewer,
                readxl, growthrates, growthcurver, patchwork, betareg)
 ```
@@ -250,7 +270,7 @@ pVariantEmergenceHeat<-NRRLMulti2_Variants %>%
   ggplot(aes(x=factor(Pass), y=ID, fill=fAlt))+
   geom_tile(lwd=0.5)+
   #scale_fill_viridis_c() +
-  scale_fill_gradient2(low="blue", mid="grey95", high="red3")+
+  scale_fill_gradient2(low="blue", mid="grey99", high="red3")+
   #scale_fill_gradient2(low="blue", mid="ivory1", high="red3")+
   theme_classic()+
   theme(axis.text.y=element_text(size=xTextSize-5), 
@@ -282,7 +302,7 @@ Plot Fig 1 with the joint ordination
 ```{r}
 plot_grid(pMultiPlotsTop_Merge, pVariantEmergenceHeat, ncol=1, rel_heights = c(2,1), labels=c("", "D"))
 #ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.png", width=10, height=12, units="in", dpi=400)
-ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey95_blackfill.tiff", width=240, height=275, units="mm")
+ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.tiff", width=240, height=275, units="mm")
 # 2/3 page width is 114 mm - supplied at 2X size
 ```
 
@@ -508,7 +528,7 @@ plate3_range
 Since the blanks are changing a bit over time, we might want to use the "blank" method for correction. Here, growthcurver will take the ODs from a single column named "blank" and use that to correct the rest of the plate. In each plate, we will therefore name one "blank column (created as the average of the actual blanks):
 ```{r}
 plate1_mod <- mutate(plate1, blank=rowMeans(dplyr::select(plate1, c(E2, F2, G2, H2))))
-View(plate1_mod)
+#View(plate1_mod)
 plate1_mod$blank
 ```
 Same for other plates:
@@ -538,9 +558,9 @@ plate2_mod<-dplyr::select(plate2_mod, all_of(keepNames2))
 plate3_mod<-dplyr::select(plate3_mod, all_of(keepNames3))
 
 # confirm
-names(plate1_mod)
-names(plate2_mod)
-names(plate3_mod)
+#names(plate1_mod)
+#names(plate2_mod)
+#names(plate3_mod)
 ```
 
 ## Growthcurver
@@ -606,8 +626,8 @@ allplates_LVparams_min<-allplates_LVparams_min[complete.cases(allplates_LVparams
 Let's prune out the most egregious weird wells, where the fit failed
 ```{r}
 # the "weird wells"
-View(allplates_LVparams_min[which(allplates_LVparams_min$t_mid>16),])
-View(allplates_LVparams_min[which(allplates_LVparams_min$t_mid<10.2),])
+#View(allplates_LVparams_min[which(allplates_LVparams_min$t_mid>16),])
+#View(allplates_LVparams_min[which(allplates_LVparams_min$t_mid<10.2),])
 ```
 
 ```{r}
@@ -756,7 +776,7 @@ Now that we have these fits, let's extract the parameters.
 The coef() function returns a matrix, which is not what we want. Let's turn this into a data frame:
 ```{r}
 plate1_manyspline_coef<-as_tibble(coef(plate1_manyspline), rownames=NA)
-str(plate1_manyspline_coef)
+#str(plate1_manyspline_coef)
 ```
 Note that it did not bring well labels along for some reason (I think rownames=NA is supposed to retain these, not sure what's wrong); we'll have to retrieve those.
 ```{r}
@@ -1032,10 +1052,13 @@ pCompeteDeltaGrowth_byORI<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_r, color=strain2))+
   geom_jitter(width=0.1)+
   theme_light()+
+   stat_smooth(method = "lm", 
+              formula = y ~ x, 
+              geom = "smooth",
+              color="grey40") +
   #scale_color_viridis_d(begin=0.1, end=0.9)+
   scale_color_manual(values=c("black", "red", "red2", "red3", "red4",
-                                        "dodgerblue", "dodgerblue2", "dodgerblue3", "dodgerblue4",
-                                        "magenta", "magenta3", "purple", "purple3")) +
+                                        "dodgerblue", "dodgerblue2", "dodgerblue3", "dodgerblue4")) +
     theme(
     axis.text=element_text(size=xTextSize), 
     axis.title=element_text(size=xTextSize+2),
@@ -1053,6 +1076,10 @@ pCompeteDeltaGrowth_byALT<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_r, color=strain1))+
   geom_jitter(width=0.1)+
   theme_light()+
+   stat_smooth(method = "lm", 
+              formula = y ~ x, 
+              geom = "smooth",
+              color="grey40") +
   scale_color_viridis_d(begin=0.2, end=0.8, option="inferno")+
     theme(
     axis.text=element_text(size=xTextSize), 
@@ -1073,10 +1100,13 @@ pCompeteDeltaCFU_byORI<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_CFU, color=strain2))+
   geom_jitter(width=0.1)+
   theme_light()+
+   stat_smooth(method = "lm", 
+              formula = y ~ x, 
+              geom = "smooth",
+              color="grey40") +
   #scale_color_viridis_d(begin=0.1, end=0.9)+
   scale_color_manual(values=c("black", "red", "red2", "red3", "red4",
-                                        "dodgerblue", "dodgerblue2", "dodgerblue3", "dodgerblue4",
-                                        "magenta", "magenta3", "purple", "purple3")) +
+                                        "dodgerblue", "dodgerblue2", "dodgerblue3", "dodgerblue4")) +
     theme(
     axis.text=element_text(size=xTextSize), 
     axis.title=element_text(size=xTextSize+2),
@@ -1094,6 +1124,10 @@ pCompeteDeltaCFU_byALT<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_CFU, color=strain1))+
   geom_jitter(width=0.1)+
   theme_light()+
+  stat_smooth(method = "lm", 
+              formula = y ~ x, 
+              geom = "smooth",
+              color="grey40") +
   scale_color_viridis_d(begin=0.2, end=0.8, option="inferno")+
     theme(
     axis.text=element_text(size=xTextSize), 
@@ -1108,16 +1142,23 @@ pCompeteDeltaCFU_byALT
 ```
 And together:
 ```{r}
-(pCompeteDeltaGrowth_byORI+pCompeteDeltaGrowth_byALT + plot_layout(axis_titles = "collect"))/
-  (pCompeteDeltaCFU_byORI+pCompeteDeltaCFU_byALT + plot_layout(axis_titles = "collect")) + 
-  plot_layout(guides = 'collect', axis_titles = "collect") +
-   plot_annotation(tag_levels = 'A') & 
-  #theme(legend.position = 'bottom',
-  #      legend.text=element_text(size=xTextSize-2)) &
+#(pCompeteDeltaGrowth_byORI+pCompeteDeltaGrowth_byALT + patchwork::plot_layout(axis_titles = "collect"))/
+#  (pCompeteDeltaCFU_byORI+pCompeteDeltaCFU_byALT + patchwork::plot_layout(axis_titles = "collect")) + 
+  #patchwork::plot_layout(guides = 'collect', axis_titles = "collect") +
+#   patchwork::plot_annotation(tag_levels = 'A') & 
+#  #theme(legend.position = 'bottom',
+#  #      legend.text=element_text(size=xTextSize-2)) &
+#  xlim(0,1)
+
+(pCompeteDeltaGrowth_byORI+pCompeteDeltaCFU_byORI) /
+  (pCompeteDeltaGrowth_byALT+pCompeteDeltaCFU_byALT) +
+  plot_layout(guides = 'collect') &
   xlim(0,1)
+
 #plot_grid(pCompeteDeltaGrowth_byORI, pCompeteDeltaCFU_byORI,
 #          pCompeteDeltaGrowth_byALT, pCompeteDeltaCFU_byALT,
 #          ncol=2, labels="AUTO")
+
 ggsave("Figure S7_CompeteDeltas.png", width=10, height=8, units="in", dpi=300)
 ```
 Label by same vs different pairs:
@@ -1185,15 +1226,32 @@ pNRRL2_CG_Morph_Compete_d14_Same_small_facet
 Statistics. First reduce the data frame to just the proportion fAlt and the factors:
 ```{r}
 NRRL2_CG_Morph_Compete_d14_s<- NRRL2_CG_Morph_Compete_d14 %>%
-  dplyr::select(strain1, strain2, SamePair, fAlt)
+  dplyr::select(strain1, strain2, gen1, gen2, comm1, comm2, SamePair, fAlt)
 ```
 
 Contrasts for beta regression
 ```{r}
+# strain ID
 contrasts(NRRL2_CG_Morph_Compete_d14_s$strain1)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$strain1))
 colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$strain1))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$strain1),-1)
 contrasts(NRRL2_CG_Morph_Compete_d14_s$strain2)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$strain2))
 colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$strain2))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$strain2),-1)
+
+#generation
+NRRL2_CG_Morph_Compete_d14_s$gen1<-as.factor(NRRL2_CG_Morph_Compete_d14_s$gen1)
+NRRL2_CG_Morph_Compete_d14_s$gen2<-as.factor(NRRL2_CG_Morph_Compete_d14_s$gen2)
+contrasts(NRRL2_CG_Morph_Compete_d14_s$gen1)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$gen1))
+colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$gen1))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$gen1),-1)
+contrasts(NRRL2_CG_Morph_Compete_d14_s$gen2)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$gen2))
+colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$gen2))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$gen2),-1)
+
+# community
+NRRL2_CG_Morph_Compete_d14_s$comm1<-as.factor(NRRL2_CG_Morph_Compete_d14_s$comm1)
+NRRL2_CG_Morph_Compete_d14_s$comm2<-as.factor(NRRL2_CG_Morph_Compete_d14_s$comm2)
+contrasts(NRRL2_CG_Morph_Compete_d14_s$comm1)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$comm1))
+colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$comm1))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$comm1),-1)
+contrasts(NRRL2_CG_Morph_Compete_d14_s$comm2)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$comm2))
+colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$comm2))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$comm2),-1)
 ```
 
 
@@ -1209,11 +1267,33 @@ Diagnostics
 plot(pairwise_betar)
 ```
 
-Residuals
+Now test for generation
 ```{r}
-plot(residuals(pairwise_betar))
+pairwise_betar_gen<-betareg(fAlt ~ gen1 + gen2, data=NRRL2_CG_Morph_Compete_d14_s)
+pairwise_betar_gen_est<-broom::tidy(pairwise_betar_gen)
+pairwise_betar_gen_est
+```
+What are these contrasts?
+```{r}
+contrasts(NRRL2_CG_Morph_Compete_d14_s$gen2)
 ```
 
+Diagnostics:
+```{r}
+plot(pairwise_betar_gen)
+```
+
+Same regression, with community:
+```{r}
+pairwise_betar_comm<-betareg(fAlt ~ comm1 + comm2, data=NRRL2_CG_Morph_Compete_d14_s)
+pairwise_betar_comm_est<-broom::tidy(pairwise_betar_comm)
+pairwise_betar_comm_est
+```
+
+Diagnostics
+```{r}
+plot(pairwise_betar_comm)
+```
 
 
 ## Pairwise competition with worms on plates
