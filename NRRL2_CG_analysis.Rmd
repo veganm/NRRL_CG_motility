@@ -9,7 +9,7 @@ This notebook contains all the code for the manuscript.
 First, load the necessary:
 ```{r}
 pacman::p_load(tidyverse, cowplot, vegan, FactoMineR, readxl, ggpubr, MASS, RColorBrewer,
-               readxl, growthrates, growthcurver)
+               readxl, growthrates, growthcurver, patchwork, betareg)
 ```
  
 Define global:
@@ -250,8 +250,8 @@ pVariantEmergenceHeat<-NRRLMulti2_Variants %>%
   ggplot(aes(x=factor(Pass), y=ID, fill=fAlt))+
   geom_tile(lwd=0.5)+
   #scale_fill_viridis_c() +
-  #scale_fill_gradient2(low="blue", mid="grey95", high="red3")+
-  scale_fill_gradient2(low="blue", mid="ivory1", high="red3")+
+  scale_fill_gradient2(low="blue", mid="grey95", high="red3")+
+  #scale_fill_gradient2(low="blue", mid="ivory1", high="red3")+
   theme_classic()+
   theme(axis.text.y=element_text(size=xTextSize-5), 
         axis.text.x=element_text(size=xTextSize), 
@@ -259,7 +259,8 @@ pVariantEmergenceHeat<-NRRLMulti2_Variants %>%
         plot.title=element_text(hjust=0.5, size=xTextSize),
         legend.text = element_text(size=xTextSize),
         legend.title = element_text(size=xTextSize),
-        panel.background = element_rect(fill = 'grey80', color = 'grey80')
+        #panel.background = element_rect(fill = 'grey80', color = 'grey80')
+        panel.background = element_rect(fill = 'black', color = 'black')
   )+
   labs(y="Community", x="Pass", title="Emergence of Morphological Variants", fill="fAlt")+
   facet_wrap(~Species, ncol=3)+
@@ -281,7 +282,7 @@ Plot Fig 1 with the joint ordination
 ```{r}
 plot_grid(pMultiPlotsTop_Merge, pVariantEmergenceHeat, ncol=1, rel_heights = c(2,1), labels=c("", "D"))
 #ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.png", width=10, height=12, units="in", dpi=400)
-ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.tiff", width=240, height=275, units="mm")
+ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey95_blackfill.tiff", width=240, height=275, units="mm")
 # 2/3 page width is 114 mm - supplied at 2X size
 ```
 
@@ -544,18 +545,11 @@ names(plate3_mod)
 
 ## Growthcurver
 
-Let's go ahead and try Growthcurver. We'll get parameter estimates for all of the remaining sample wells with and without the blank-well correction. First, with the default ("min") correction:
+Using growthcurver to get parameter estimates for all of the remaining sample wells with and without the blank-well correction. First, with the default ("min") correction:
 ```{r}
 plate1_out_min<-SummarizeGrowthByPlate(plate1_mod, plot_fit=TRUE, plot_file = "plate1_min.pdf")
 plate2_out_min<-SummarizeGrowthByPlate(plate2_mod, plot_fit=TRUE, plot_file = "plate2_min.pdf")
 plate3_out_min<-SummarizeGrowthByPlate(plate3_mod, plot_fit=TRUE, plot_file = "plate3_min.pdf")
-```
-
-The plots look OK - onboard smoothing seems to have done an OK job. Print out estimates and see how we are doing:
-```{r}
-View(plate1_out_min)
-View(plate2_out_min)
-View(plate3_out_min)
 ```
 
 So far so good. What if we use the "blank" correction?
@@ -565,9 +559,9 @@ plate2_out_blank<-SummarizeGrowthByPlate(plate2_mod, bg_correct = "blank", plot_
 plate3_out_blank<-SummarizeGrowthByPlate(plate3_mod, bg_correct = "blank", plot_fit=TRUE, plot_file = "plate3_blank.pdf")
 ```
 
-The fits are very similar, so let's work with the default for now. 
+The fits are very similar, so let's work with the default. 
 
-Now let's label these estimates using the well info from each file. For plate 1:
+Label these estimates using the well info from each file. For plate 1:
 ```{r}
 my_labels1<-read_excel("20230217-MD-NGM-p6-p10.xlsx", sheet="Labels", col_names=TRUE)
 #knitr::kable(my_labels1)
@@ -609,7 +603,7 @@ Clean up
 allplates_LVparams_min<-allplates_LVparams_min[complete.cases(allplates_LVparams_min),]
 ```
 
-Let's prune out the most egregious weird wells:
+Let's prune out the most egregious weird wells, where the fit failed
 ```{r}
 # the "weird wells"
 View(allplates_LVparams_min[which(allplates_LVparams_min$t_mid>16),])
@@ -735,14 +729,14 @@ Starting with plate 1, fit splines:
 plate1_manyspline<-all_splines(OD600~time | sample, data=plate1_mod_long, spar=0.9)
 par(mfrow=c(7,8))
 par(mar = c(2.5, 4, 2, 1))
-plot(plate1_manyspline)
+#plot(plate1_manyspline)
 ```
 Plots look good; smoothing is working well. Let's do the same for each of the other plates. Plate 2:
 ```{r}
 plate2_manyspline<-all_splines(OD600~time | sample, data=plate2_mod_long, spar=0.9)
 par(mfrow=c(7,8))
 par(mar = c(2.5, 4, 2, 1))
-plot(plate2_manyspline)
+#plot(plate2_manyspline)
 ```
 
 Plate 3:
@@ -750,13 +744,13 @@ Plate 3:
 plate3_manyspline<-all_splines(OD600~time | sample, data=plate3_mod_long, spar=0.9)
 par(mfrow=c(7,8))
 par(mar = c(2.5, 4, 2, 1))
-plot(plate3_manyspline)
+#plot(plate3_manyspline)
 ```
 
 Now that we have these fits, let's extract the parameters. 
 ```{r}
 # This gives us a list by well. For splines, we only need to keep max growth rate (mumax) estimates
-coef(plate1_manyspline)
+#coef(plate1_manyspline)
 ```
 
 The coef() function returns a matrix, which is not what we want. Let's turn this into a data frame:
@@ -814,18 +808,6 @@ allplates_manyspline_coef<-rbind(plate1_manyspline_coef,
 str(allplates_manyspline_coef)
 ```
 
-Now we can plot out exactly as before:
-```{r}
-WTmedian_r_spline<-median(allplates_manyspline_coef$mumax[allplates_manyspline_coef$Strain=="WT"])
-
-# Colored by isolate
-allplates_manyspline_coef %>%
-  ggplot(aes(x=Strain, y=mumax, color=factor(Rep)))+
-  theme_classic()+
-  geom_jitter(width=0.1)+
-  geom_hline(yintercept = WTmedian_r_spline, color="black")+
-  labs(x="", y="Growth Rate (r)", color="Isolate")
-```
 These values are much more reasonable than the ones obtained from growthcurver. Plot:
 ```{r}
 # reorder
@@ -979,7 +961,7 @@ pNRRL2_MorphCompeteInVitro_fAlt<-NRRL2_CG_Morph_Compete %>%
   ggplot(aes(x=day, y=fAlt, color=strain1)) +
   geom_line(aes(linetype=factor(rep)))+
   theme_bw()+
-  scale_colour_discrete()+
+    scale_color_viridis_d(begin=0.2, end=0.8, option="inferno")+
   theme(
     axis.text=element_text(size=xTextSize), 
     axis.title=element_text(size=xTextSize+2),
@@ -993,7 +975,7 @@ pNRRL2_MorphCompeteInVitro_fAlt<-NRRL2_CG_Morph_Compete %>%
        linetype="Isolate", color="Alt Morph")+
   facet_wrap(~strain2)
 pNRRL2_MorphCompeteInVitro_fAlt
-
+ggsave("Figure S6_InVitroTimeSeries.png", width=10, height=8, units="in", dpi=300)
 ```
 
 Now we can take the various deltas. Let's start by holding the day 14 data from the pairwise comparisons. We'll add some columns to hold the deltas, then fill them using the strain1 and strain2 labels to find the right data in the other data frames.
@@ -1003,6 +985,7 @@ NRRL2_CG_Morph_Compete_14<-NRRL2_CG_Morph_Compete %>%
   add_column(delta_r=NA, delta_CFU=NA)
 glimpse(NRRL2_CG_Morph_Compete_14)
 ```
+
 Now to grab the deltas. First check out the objects - CFU
 ```{r}
 str(CG_CFU)
@@ -1049,6 +1032,10 @@ pCompeteDeltaGrowth_byORI<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_r, color=strain2))+
   geom_jitter(width=0.1)+
   theme_light()+
+  #scale_color_viridis_d(begin=0.1, end=0.9)+
+  scale_color_manual(values=c("black", "red", "red2", "red3", "red4",
+                                        "dodgerblue", "dodgerblue2", "dodgerblue3", "dodgerblue4",
+                                        "magenta", "magenta3", "purple", "purple3")) +
     theme(
     axis.text=element_text(size=xTextSize), 
     axis.title=element_text(size=xTextSize+2),
@@ -1057,7 +1044,7 @@ pCompeteDeltaGrowth_byORI<-NRRL2_CG_Morph_Compete_14 %>%
     #legend.position = "none",
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
-  labs(y="Change in Growth Rate", x="Fraction Alt Morph", title="")
+  labs(y="Change in \nGrowth Rate", x="Fraction Alt Morph", title="")
 pCompeteDeltaGrowth_byORI
 ```
  Color by alt morph
@@ -1066,6 +1053,7 @@ pCompeteDeltaGrowth_byALT<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_r, color=strain1))+
   geom_jitter(width=0.1)+
   theme_light()+
+  scale_color_viridis_d(begin=0.2, end=0.8, option="inferno")+
     theme(
     axis.text=element_text(size=xTextSize), 
     axis.title=element_text(size=xTextSize+2),
@@ -1074,7 +1062,7 @@ pCompeteDeltaGrowth_byALT<-NRRL2_CG_Morph_Compete_14 %>%
     #legend.position = "none",
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
-  labs(y="Change in Growth Rate", x="Fraction Alt Morph", title="")
+  labs(y="Change in \nGrowth Rate", x="Fraction Alt Morph", title="")
 pCompeteDeltaGrowth_byALT
 ```
  
@@ -1085,6 +1073,10 @@ pCompeteDeltaCFU_byORI<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_CFU, color=strain2))+
   geom_jitter(width=0.1)+
   theme_light()+
+  #scale_color_viridis_d(begin=0.1, end=0.9)+
+  scale_color_manual(values=c("black", "red", "red2", "red3", "red4",
+                                        "dodgerblue", "dodgerblue2", "dodgerblue3", "dodgerblue4",
+                                        "magenta", "magenta3", "purple", "purple3")) +
     theme(
     axis.text=element_text(size=xTextSize), 
     axis.title=element_text(size=xTextSize+2),
@@ -1093,7 +1085,7 @@ pCompeteDeltaCFU_byORI<-NRRL2_CG_Morph_Compete_14 %>%
     #legend.position = "none",
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
-  labs(y="Change in log(Max CFU)", x="Fraction Alt Morph", title="")
+  labs(y="Change in \nlog(Max CFU)", x="Fraction Alt Morph", title="")
 pCompeteDeltaCFU_byORI
 ```
 again, color by alt morph?
@@ -1102,6 +1094,7 @@ pCompeteDeltaCFU_byALT<-NRRL2_CG_Morph_Compete_14 %>%
   ggplot(aes(x=fAlt, y=delta_CFU, color=strain1))+
   geom_jitter(width=0.1)+
   theme_light()+
+  scale_color_viridis_d(begin=0.2, end=0.8, option="inferno")+
     theme(
     axis.text=element_text(size=xTextSize), 
     axis.title=element_text(size=xTextSize+2),
@@ -1110,22 +1103,29 @@ pCompeteDeltaCFU_byALT<-NRRL2_CG_Morph_Compete_14 %>%
     #legend.position = "none",
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
-  labs(y="Change in log(Max CFU)", x="Fraction Alt Morph", title="")
+  labs(y="Change in \nlog(Max CFU)", x="Fraction Alt Morph", title="")
 pCompeteDeltaCFU_byALT
 ```
 And together:
 ```{r}
-plot_grid(pCompeteDeltaGrowth_byORI, pCompeteDeltaCFU_byORI,
-          pCompeteDeltaGrowth_byALT, pCompeteDeltaCFU_byALT,
-          ncol=2, labels="AUTO")
-ggsave("Figure S6_CompeteDeltas.png", width=10, height=8, units="in", dpi=300)
+(pCompeteDeltaGrowth_byORI+pCompeteDeltaGrowth_byALT + plot_layout(axis_titles = "collect"))/
+  (pCompeteDeltaCFU_byORI+pCompeteDeltaCFU_byALT + plot_layout(axis_titles = "collect")) + 
+  plot_layout(guides = 'collect', axis_titles = "collect") +
+   plot_annotation(tag_levels = 'A') & 
+  #theme(legend.position = 'bottom',
+  #      legend.text=element_text(size=xTextSize-2)) &
+  xlim(0,1)
+#plot_grid(pCompeteDeltaGrowth_byORI, pCompeteDeltaCFU_byORI,
+#          pCompeteDeltaGrowth_byALT, pCompeteDeltaCFU_byALT,
+#          ncol=2, labels="AUTO")
+ggsave("Figure S7_CompeteDeltas.png", width=10, height=8, units="in", dpi=300)
 ```
 Label by same vs different pairs:
 ```{r}
 # Same vs different?
 NRRL2_CG_Morph_Compete_d14<-NRRL2_CG_Morph_Compete_14 %>% # TRUE if competing within community + pass
   mutate(SamePair=if_else(comm1==comm2 & gen1==gen2, 1, 0))
-View(NRRL2_CG_Morph_Compete_d14)
+#View(NRRL2_CG_Morph_Compete_d14)
 ```
 
 Condensed plot of competition data, day 14 only:
@@ -1134,9 +1134,10 @@ Condensed plot of competition data, day 14 only:
 pNRRL2_CG_Morph_Compete_d14_Same_small<-NRRL2_CG_Morph_Compete_d14 %>%
   ggplot(aes(x=strain2, y=fAlt, color=factor(SamePair), pch=strain1)) +
   geom_jitter(height=0, width=0.1, size=2)+
+  scale_shape_manual(values=c(0, 15, 1, 16))+
   theme_bw()+
-  #scale_color_viridis_d(option="inferno", begin=0.4, end=0.9, direction=-1)+
-  scale_colour_discrete()+
+  scale_color_viridis_d(option="inferno", begin=0.3, end=0.7, direction=-1)+
+  #scale_colour_discrete()+
   theme(
     axis.text.x = element_text(size=xTextSize, angle = 45, vjust = 1, hjust=1), 
     axis.text.y = element_text(size=xTextSize), 
@@ -1157,6 +1158,62 @@ pNRRL2_CG_Morph_Compete_d14_Same_small<-NRRL2_CG_Morph_Compete_d14 %>%
 pNRRL2_CG_Morph_Compete_d14_Same_small
 
 ```
+
+Again:
+```{r}
+pNRRL2_CG_Morph_Compete_d14_Same_small_facet<-NRRL2_CG_Morph_Compete_d14 %>%
+    ggplot(aes(x=strain2, y=fAlt, color=strain1, pch=as.factor(SamePair))) +
+  geom_jitter(width=0.05)+
+  scale_shape_manual(values=c(16, 1))+
+  theme_bw()+
+  scale_color_viridis_d(begin=0.2, end=0.8, option="inferno")+
+  theme(
+    axis.text=element_text(size=xTextSize), 
+    axis.title=element_text(size=xTextSize+2),
+    strip.text=element_text(size=xTextSize),
+    plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
+    legend.text=element_text(size=xTextSize),
+    legend.title =element_text(size=xTextSize),
+    axis.text.x = element_text(angle=90, vjust = 0.6),
+    plot.margin = margin(r=40)
+    )  +
+  labs(y="Fraction Alternate Morph", x="Original Morph", title="In Vitro Competition, Day 14",
+       color="Alt Morph", pch="Matched")+
+  facet_wrap(~strain1)
+pNRRL2_CG_Morph_Compete_d14_Same_small_facet
+```
+Statistics. First reduce the data frame to just the proportion fAlt and the factors:
+```{r}
+NRRL2_CG_Morph_Compete_d14_s<- NRRL2_CG_Morph_Compete_d14 %>%
+  dplyr::select(strain1, strain2, SamePair, fAlt)
+```
+
+Contrasts for beta regression
+```{r}
+contrasts(NRRL2_CG_Morph_Compete_d14_s$strain1)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$strain1))
+colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$strain1))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$strain1),-1)
+contrasts(NRRL2_CG_Morph_Compete_d14_s$strain2)<-contr.sum(levels(NRRL2_CG_Morph_Compete_d14_s$strain2))
+colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$strain2))<-head(levels(NRRL2_CG_Morph_Compete_d14_s$strain2),-1)
+```
+
+
+Determine whether strain identities are significant factors.
+```{r}
+pairwise_betar<-betareg(fAlt ~ strain1 + strain2, data=NRRL2_CG_Morph_Compete_d14_s)
+pairwise_betar_est<-broom::tidy(pairwise_betar)
+pairwise_betar_est
+```
+
+Diagnostics
+```{r}
+plot(pairwise_betar)
+```
+
+Residuals
+```{r}
+plot(residuals(pairwise_betar))
+```
+
 
 
 ## Pairwise competition with worms on plates
@@ -1235,7 +1292,9 @@ pCG_Compete_PlusWorm_Diff<-CG_Compete_PlusWorm_Diff %>%
   theme_bw()+
   geom_abline(slope=1, intercept=0)+
   #scale_colour_viridis_d(begin=0.92, end=0)+
-  scale_color_brewer(palette="Dark2")+
+  #scale_color_brewer(palette="Dark2")+
+  scale_color_manual(values=c("black", "red2",  "red4",
+                                        "dodgerblue2", "dodgerblue4")) +
   theme(
     axis.text.x=element_text(size=xTextSize, angle = 45, vjust = 1, hjust=1),
     axis.text.y=element_text(size=xTextSize),
@@ -1247,7 +1306,6 @@ pCG_Compete_PlusWorm_Diff<-CG_Compete_PlusWorm_Diff %>%
        title="+Worms", color="")+
   facet_wrap(~alt)
 pCG_Compete_PlusWorm_Diff
-
 ```
 
 fAlt data from chunks cut out of plates passaged in quadruplicate from day 14 of the experiment above. Diameters taken at 3 days, CFUs taken after 7 further days
@@ -1273,9 +1331,9 @@ pCG_Compete_WormDiameter<-CG_Compete_WormDiameter %>%
   ggplot(aes(x=Ori, y=Diameter, color=Alt))+
   geom_jitter(width=0.2, size=2)+
   theme_bw()+
-  #scale_colour_viridis_d(begin=0.92, end=0)+
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   #scale_color_brewer(palette="Dark2")+
-  scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
+  #scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
   theme(
     axis.text.x=element_text(size=xTextSize-2, angle = 45, vjust = 1, hjust=1),
     axis.text.y=element_text(size=xTextSize),
@@ -1315,7 +1373,8 @@ pCG_Compete_WormChunk<-CG_Compete_WormChunk %>%
   theme_bw()+
   ylim(-0.1, 1.1)+
   #scale_colour_discrete()+
-  scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
+  #scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
+    scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   theme(
     axis.text.x=element_text(size=xTextSize, angle = 45, vjust = 1, hjust=1),
     #axis.text.x=element_blank(),
@@ -1383,7 +1442,8 @@ pCG_Compete_WormChunk_OR_slopes<-CG_Compete_WormChunk_OR %>%
   ylim(-0.5, 1)+
   theme_bw()+
   #scale_color_brewer(palette="Dark2")+
-  scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
+  #scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
+    scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   geom_smooth(method="lm", formula = y ~ x, fill="NA")+
   theme(
     axis.text.x=element_text(size=xTextSize, vjust = 1, hjust=1),
@@ -1410,8 +1470,9 @@ pCG_Compete_WormChunk_fEdge_slopes<-CG_Compete_WormChunk_OR %>%
   geom_jitter(width=0.2)+
   ylim(-0.1, 1.1)+
   theme_bw()+
-  scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
+  #scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
   #scale_color_brewer(palette="Dark2")+
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   geom_smooth(method="lm", formula = y ~ x, fill="NA")+
   theme(
     axis.text.x=element_text(size=xTextSize, vjust = 1, hjust=1),
@@ -1435,36 +1496,43 @@ And together
 plot_grid(pCG_Compete_WormChunk_fEdge_slopes,
           pCG_Compete_WormChunk_OR_slopes + ylim(-0.2, 1.1),
           ncol=1, labels="AUTO")
-ggsave("FigS7_CG_Compete_WormChunk_slopes.png", width=8, height=6, units="in", dpi=400)
+ggsave("FigS8_CG_Compete_WormChunk_slopes.png", width=8, height=6, units="in", dpi=400)
 ```
 
 FIGURE 2
 ```{r}
 # Version with the condensed in vitro day 14 data
-pCG_Compete_AB<-plot_grid(pNRRL2_MorphCompeteInVitro_fAlt,
-                          pNRRL2_CG_Morph_Compete_d14_Same_small,
-                          ncol=1,
-                          rel_heights = c(1.8, 1),
-                          labels="AUTO")
-pCG_Compete_CD<-plot_grid(pCG_Compete_PlusWorm_Diff, 
-                          pCG_Compete_WormDiameter,
-                          nrow=1,
-                          rel_widths=c(1, 0.7), 
-                          labels=c("C", "D"))
-pCG_Compete_CDE<-plot_grid(pCG_Compete_CD,
-                           pCG_Compete_WormChunk,
-                           ncol=1,
-                           labels=c("", "E"))
 
-pCG_Compete<-plot_grid(pCG_Compete_AB,
-                       pCG_Compete_CDE,
-                       ncol=2,
-                       #rel_heights = c(1.8, 0.8, 0.9, 1),
-                       labels=c("", ""))
+#pCG_Compete_AB<-plot_grid(pNRRL2_MorphCompeteInVitro_fAlt,
+#                          pNRRL2_CG_Morph_Compete_d14_Same_small,
+#                          ncol=1,
+#                          rel_heights = c(1.8, 1),
+#                          labels="AUTO")
+#pCG_Compete_CD<-plot_grid(pCG_Compete_PlusWorm_Diff, 
+#                          pCG_Compete_WormDiameter,
+#                          nrow=1,
+#                          rel_widths=c(1, 0.7), 
+#                          labels=c("C", "D"))
+#pCG_Compete_CDE<-plot_grid(pCG_Compete_CD,
+#                           pCG_Compete_WormChunk,
+#                           ncol=1,
+#                           labels=c("", "E"))
+#pCG_Compete<-plot_grid(pCG_Compete_AB,
+#                       pCG_Compete_CDE,
+#                       ncol=2,
+#                       #rel_heights = c(1.8, 0.8, 0.9, 1),
+#                       labels=c("", ""))
 
-pCG_Compete
+pNRRL2_CG_Morph_Compete_d14_Same_small_facet / 
+  (pCG_Compete_PlusWorm_Diff+pCG_Compete_WormDiameter)/
+     pCG_Compete_WormChunk +
+  plot_annotation(tag_levels = 'A') +
+  plot_layout(heights=c(1.8,1,1))
+
+
+#pCG_Compete
 #ggsave("Fig2_CG_Compete.png", width=14, height=7, units="in", dpi=400)
-ggsave("Fig2_CG_Compete.tiff", width=336, height=168, units="mm")
+ggsave("Fig2_CG_Compete.tiff", height=336, width=220, units="mm")
 # full page width = 168 mm
 ```
 
@@ -1562,9 +1630,10 @@ pmotility_agarconc_LastDay<-motility_agarconc %>%
   mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
   ggplot(aes(x=factor(Community), y=Diameter,
              color=factor(Morph))) + #, group=factor(Pass))) +
-  scale_color_manual(values=c("red2", "darkblue")) +
+  #scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   #geom_boxplot(aes(fill=Community)) +
-  scale_fill_brewer(palette="Set3") +
+  #scale_fill_brewer(palette="Set3") +
   geom_jitter(aes(shape=factor(Pass)), width=0.1)+
   theme_classic()+
   theme(
@@ -1581,6 +1650,64 @@ pmotility_agarconc_LastDay<-motility_agarconc %>%
 
 pmotility_agarconc_LastDay
 ```
+
+Stats. Filter data for non-parametrics
+```{r}
+motility_agarconc_lasttime<-motility_agarconc %>%
+  filter(isLastTime==TRUE) %>%
+  mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original"))
+
+motility_agarconc_lasttime_35<-motility_agarconc_lasttime %>%
+  filter(agar==0.35) %>%
+  mutate(Pass=as.factor(Pass))
+motility_agarconc_lasttime_5<-motility_agarconc_lasttime %>%
+  filter(agar==0.5)%>%
+  mutate(Pass=as.factor(Pass))
+motility_agarconc_lasttime_1p5<-motility_agarconc_lasttime %>%
+  filter(agar==1.5)%>%
+  mutate(Pass=as.factor(Pass))
+```
+
+Test for pass as factor.
+```{r}
+temp<-motility_agarconc_lasttime_35 %>%
+  filter(Morph=="Alternate")
+kruskal.test(Diameter~Pass, data=temp)
+temp<-motility_agarconc_lasttime_35 %>%
+  filter(Morph=="Original")
+kruskal.test(Diameter~Pass, data=temp)
+
+temp<-motility_agarconc_lasttime_5 %>%
+  filter(Morph=="Alternate")
+kruskal.test(Diameter~Pass, data=temp)
+temp<-motility_agarconc_lasttime_5 %>%
+  filter(Morph=="Original")
+kruskal.test(Diameter~Pass, data=temp)
+
+
+temp<-motility_agarconc_lasttime_1p5 %>%
+  filter(Morph=="Alternate")
+kruskal.test(Diameter~Pass, data=temp)
+temp<-motility_agarconc_lasttime_1p5 %>%
+  filter(Morph=="Original")
+kruskal.test(Diameter~Pass, data=temp)
+```
+
+
+Alternate vs original morphs
+```{r}
+
+wilcox.test(Diameter~Morph, data=motility_agarconc_lasttime_35)
+```
+```{r}
+wilcox.test(Diameter~Morph, data=motility_agarconc_lasttime_5)
+```
+
+```{r}
+
+wilcox.test(Diameter~Morph, data=motility_agarconc_lasttime_1p5)
+```
+
 
 Create a data summary:
 ```{r}
@@ -1641,13 +1768,13 @@ And clean up:
 motilityA_p35<-motilityA_p35 %>%
   mutate(Morph=replace(Morph, Community=="WT", "o")) %>% # ..that WT is original morph
   mutate(Pass=replace(Pass, Community=="WT", 0)) # and is passage 0
-View(motilityA_p35)
+#View(motilityA_p35)
 ```
 
 Get rid of missing data:
 ```{r}
 motilityA_p35 <- motilityA_p35[!(is.na(motilityA_p35$Diameter)), ]
-view(motilityA_p35)
+#View(motilityA_p35)
 ```
 
 And plot out:
@@ -1684,7 +1811,7 @@ motilityA_p35_day1p8_summ<-motilityA_p35 %>%
             nreps=n()) %>%
   mutate_if(is.numeric, round, digits=2) #values, if something is numeric, round to 2 decimals
 
-View(motilityA_p35_day1p8_summ)
+#View(motilityA_p35_day1p8_summ)
 ```
 
 And plot. First all replicates:
@@ -1733,7 +1860,7 @@ motilityF_p35$isolate<-as.factor(motilityF_p35$isolate)
 motilityF_p35 <- motilityF_p35 %>%
   mutate_if(is.numeric, round, digits=2)
 
-View(motilityF_p35)
+#View(motilityF_p35)
 ```
 
 
@@ -1753,7 +1880,7 @@ motilityF_p35<-motilityF_p35 %>%
   mutate(Morph=replace(Morph, Community=="WT", "o")) %>% # ..that WT is original morph
   mutate(Pass=replace(Pass, Community=="WT", 0)) # and is passage 0
 
-glimpse(motilityF_p35)
+#glimpse(motilityF_p35)
 ```
 
 And plot out:
@@ -1790,7 +1917,7 @@ motilityF_p35_day1p7_summ<-motilityF_p35 %>%
             nreps=n()) %>%
   mutate_if(is.numeric, round, digits=2) #values, if something is numeric, round to 2 decimals
 
-View(motilityF_p35_day1p7_summ)
+#View(motilityF_p35_day1p7_summ)
 ```
 
 And plot. First all replicates:
@@ -3395,5 +3522,7 @@ ggsave("FigS10_pDiameterVsK.png", width=8, height=10, units="in", dpi=300)
 ```
 
 
+## Resources
+https://hansjoerg.me/2019/05/10/regression-modeling-with-proportion-data-part-1/
 
 
