@@ -1257,9 +1257,12 @@ colnames(contrasts(NRRL2_CG_Morph_Compete_d14_s$comm2))<-head(levels(NRRL2_CG_Mo
 
 Determine whether strain identities are significant factors.
 ```{r}
-pairwise_betar<-betareg(fAlt ~ strain1 + strain2, data=NRRL2_CG_Morph_Compete_d14_s)
-pairwise_betar_est<-broom::tidy(pairwise_betar)
-pairwise_betar_est
+#pairwise_betar_strain<-betareg(fAlt ~ strain1 * strain2, data=NRRL2_CG_Morph_Compete_d14_s)
+pairwise_betar_strain<-betareg(fAlt ~ strain1 + strain2, data=NRRL2_CG_Morph_Compete_d14_s)
+pairwise_betar_strain_est<-broom::tidy(pairwise_betar_strain)
+pairwise_betar_strain_est
+#write.csv(pairwise_betar_strain_est, file = 'pairwise_betar_strainpairs_est.csv', row.names = FALSE)
+write.csv(pairwise_betar_strain_est, file = 'pairwise_betar_strain_est.csv', row.names = FALSE)
 ```
 
 Diagnostics
@@ -1273,7 +1276,7 @@ pairwise_betar_gen<-betareg(fAlt ~ gen1 + gen2, data=NRRL2_CG_Morph_Compete_d14_
 pairwise_betar_gen_est<-broom::tidy(pairwise_betar_gen)
 pairwise_betar_gen_est
 ```
-What are these contrasts?
+Confirm contrasts
 ```{r}
 contrasts(NRRL2_CG_Morph_Compete_d14_s$gen2)
 ```
@@ -1293,6 +1296,19 @@ pairwise_betar_comm_est
 Diagnostics
 ```{r}
 plot(pairwise_betar_comm)
+```
+
+Full model (all factors, leaving out passage number of original morph since there is confounding with unique community value for ancestor, and because otherwise this factor is ns):
+```{r}
+pairwise_betar<-betareg(fAlt ~ gen1 + comm1 + comm2, data=NRRL2_CG_Morph_Compete_d14_s)
+pairwise_betar_est<-broom::tidy(pairwise_betar)
+pairwise_betar_est
+write.csv(pairwise_betar_est, file = 'pairwise_betar_est.csv', row.names = FALSE)
+```
+
+Diagnostics
+```{r}
+plot(pairwise_betar)
 ```
 
 
@@ -1406,16 +1422,22 @@ CG_Compete_WormDiameter$Ori <-factor(CG_Compete_WormDiameter$Ori,
                                   levels=c("WT", "A1o10", "A2o10",
                                            "F1o10", "F2o10"))
 
-
+my_comparisons <- list(c("A1o10", "A2o10"),
+                       c("F1o10", "F2o10"),
+                       c("WT", "A1o10"), 
+                        c("WT", "A2o10"), 
+                        c("WT", "F1o10"),
+                        c("WT", "F2o10")
+                        )
 pCG_Compete_WormDiameter<-CG_Compete_WormDiameter %>%
-  ggplot(aes(x=Ori, y=Diameter, color=Alt))+
-  geom_jitter(width=0.2, size=2)+
+  ggplot(aes(x=Ori, y=Diameter))+
+  geom_jitter(width=0.2, size=2, aes(color=Alt))+
   theme_bw()+
   scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   #scale_color_brewer(palette="Dark2")+
   #scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
   theme(
-    axis.text.x=element_text(size=xTextSize-2, angle = 45, vjust = 1, hjust=1),
+    axis.text.x=element_text(size=xTextSize, angle = 45, vjust = 1, hjust=1),
     axis.text.y=element_text(size=xTextSize),
     axis.title=element_text(size=xTextSize+2),
     strip.text=element_text(size=xTextSize),
@@ -1424,9 +1446,15 @@ pCG_Compete_WormDiameter<-CG_Compete_WormDiameter %>%
     #legend.position = "top"
     #legend.position=c(0.8, 0.8)
     )  +
+  stat_compare_means(comparisons=my_comparisons,
+                     label = "p.signif")+
+  #stat_compare_means(label.y=1.2) +
   labs(title="+Worms", y="Diameter (cm)", x="", color="")
 pCG_Compete_WormDiameter
-
+```
+Global test:
+```{r}
+kruskal.test(Diameter~Ori, data=CG_Compete_WormDiameter)
 ```
 
 and the CFU data
@@ -1448,7 +1476,7 @@ CG_Compete_WormChunk$Ori <-factor(CG_Compete_WormChunk$Ori,
                                                  "F1o10", "F2o10"))
 
 pCG_Compete_WormChunk<-CG_Compete_WormChunk %>%
-  ggplot(aes(x=Chunk, y=fAlt, pch=Chunk)) +
+  ggplot(aes(x=Chunk, y=fAlt)) +
   geom_jitter(width=0.1, size=2, aes(color=Alt))+
   theme_bw()+
   ylim(-0.1, 1.1)+
@@ -1464,7 +1492,7 @@ pCG_Compete_WormChunk<-CG_Compete_WormChunk %>%
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
   labs(y="fAlt", x="", title="+Worms",
-       color="", pch="")+
+       color="")+
   facet_wrap(~Ori, nrow=1)+
   stat_compare_means(method="wilcox.test", 
                      label.y=1.05,
@@ -1472,112 +1500,6 @@ pCG_Compete_WormChunk<-CG_Compete_WormChunk %>%
 pCG_Compete_WormChunk
 ```
 
-
-
-
-Are day-3 expansion diameter and over-representation of Alt at plate edge correlated? First, let's get over-representation quantified:
-
-```{r}
-CG_Compete_WormChunk_OR<-CG_Compete_WormChunk %>%  # pivot out so fAlt at center and edge are accessible
-  dplyr::select(Ori, Alt, Well, Isolate, techrep, Chunk, fAlt) %>%
-  pivot_wider(names_from = Chunk, values_from = fAlt)
-
-CG_Compete_WormChunk_OR<-CG_Compete_WormChunk_OR %>% # get the difference (OR)
-  mutate(delta_fAlt=Edge-Center, # as absolute
-         delta_fAlt_normalized=(Edge-Center)/Edge) #and relative
-
-# quick check
-CG_Compete_WormChunk_OR %>%
-  ggplot(aes(x=Ori, y=delta_fAlt, color=Alt))+
-  geom_jitter(width=0.2)
-```
-
-
-Now the expansion diameters at day 3. The data frames are already in the same order, so this is easy
-```{r}
-CG_Compete_WormChunk_OR$Diameter<-CG_Compete_WormDiameter$Diameter
-
-# quick check
-CG_Compete_WormChunk_OR %>%
-  ggplot(aes(x=Diameter, y=delta_fAlt, color=Ori))+
-  geom_jitter(width=0.2)
-```
-
-
-clearly this is complex. Separate by pair type:
-```{r}
-CG_Compete_WormChunk_OR$PairType<-"Matched"
-idx<-which(CG_Compete_WormChunk_OR$Ori=="A1o10" |
-             CG_Compete_WormChunk_OR$Ori=="F1o10")
-CG_Compete_WormChunk_OR$PairType[idx]<-"Non-Matched"
-idx<-which(CG_Compete_WormChunk_OR$Ori=="WT")
-CG_Compete_WormChunk_OR$PairType[idx]<-"Ancestor"
-```
-
-and plot
-```{r}
-pCG_Compete_WormChunk_OR_slopes<-CG_Compete_WormChunk_OR %>%
-  ggplot(aes(x=Diameter, y=delta_fAlt, color=Alt))+
-  geom_jitter(width=0.2)+
-  ylim(-0.5, 1)+
-  theme_bw()+
-  #scale_color_brewer(palette="Dark2")+
-  #scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
-    scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-  geom_smooth(method="lm", formula = y ~ x, fill="NA")+
-  theme(
-    axis.text.x=element_text(size=xTextSize, vjust = 1, hjust=1),
-    #axis.text.x=element_blank(),
-    axis.text.y=element_text(size=xTextSize),
-    axis.title=element_text(size=xTextSize+2),
-    strip.text=element_text(size=xTextSize),
-    plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
-    legend.text=element_text(size=xTextSize))  +
-  labs(y=expression(fAlt[Edge]-fAlt[Center]), x="Diameter (cm)", 
-       title="",
-       color="")+
-  facet_wrap(~PairType)
-pCG_Compete_WormChunk_OR_slopes
-#ggsave("pCG_Compete_WormChunk_OR_slopes.png", width=8, height=3, units="in", dpi=400)
-
-```
-
-
-and fAlt at edge:
-```{r}
-pCG_Compete_WormChunk_fEdge_slopes<-CG_Compete_WormChunk_OR %>%
-  ggplot(aes(x=Diameter, y=Edge, color=Alt))+
-  geom_jitter(width=0.2)+
-  ylim(-0.1, 1.1)+
-  theme_bw()+
-  #scale_color_manual(values=c("chartreuse3", "darkorchid2")) +
-  #scale_color_brewer(palette="Dark2")+
-  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-  geom_smooth(method="lm", formula = y ~ x, fill="NA")+
-  theme(
-    axis.text.x=element_text(size=xTextSize, vjust = 1, hjust=1),
-    #axis.text.x=element_blank(),
-    axis.text.y=element_text(size=xTextSize),
-    axis.title=element_text(size=xTextSize+2),
-    strip.text=element_text(size=xTextSize),
-    plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
-    legend.text=element_text(size=xTextSize))  +
-  labs(y=expression(fAlt[Edge]), x="Diameter (cm)", 
-       title="",
-       color="")+
-  facet_wrap(~PairType)
-pCG_Compete_WormChunk_fEdge_slopes
-#ggsave("pCG_Compete_WormChunk_fEdge_slopes.png", width=8, height=3, units="in", dpi=400)
-```
-
-
-And together
-```{r}
-plot_grid(pCG_Compete_WormChunk_fEdge_slopes,
-          pCG_Compete_WormChunk_OR_slopes + ylim(-0.2, 1.1),
-          ncol=1, labels="AUTO")
-ggsave("FigS8_CG_Compete_WormChunk_slopes.png", width=8, height=6, units="in", dpi=400)
-```
 
 FIGURE 2
 ```{r}
@@ -1753,24 +1675,29 @@ Test for pass as factor.
 temp<-motility_agarconc_lasttime_35 %>%
   filter(Morph=="Alternate")
 kruskal.test(Diameter~Pass, data=temp)
+kruskal.test(Diameter~Community, data=temp)
 temp<-motility_agarconc_lasttime_35 %>%
   filter(Morph=="Original")
 kruskal.test(Diameter~Pass, data=temp)
+kruskal.test(Diameter~Community, data=temp)
 
 temp<-motility_agarconc_lasttime_5 %>%
   filter(Morph=="Alternate")
 kruskal.test(Diameter~Pass, data=temp)
+kruskal.test(Diameter~Community, data=temp)
 temp<-motility_agarconc_lasttime_5 %>%
   filter(Morph=="Original")
 kruskal.test(Diameter~Pass, data=temp)
-
+kruskal.test(Diameter~Community, data=temp)
 
 temp<-motility_agarconc_lasttime_1p5 %>%
   filter(Morph=="Alternate")
 kruskal.test(Diameter~Pass, data=temp)
+kruskal.test(Diameter~Community, data=temp)
 temp<-motility_agarconc_lasttime_1p5 %>%
   filter(Morph=="Original")
 kruskal.test(Diameter~Pass, data=temp)
+kruskal.test(Diameter~Community, data=temp)
 ```
 
 
@@ -1784,10 +1711,8 @@ wilcox.test(Diameter~Morph, data=motility_agarconc_lasttime_5)
 ```
 
 ```{r}
-
 wilcox.test(Diameter~Morph, data=motility_agarconc_lasttime_1p5)
 ```
-
 
 Create a data summary:
 ```{r}
@@ -1802,7 +1727,7 @@ motility_agarconc_summ<-motility_agarconc %>%
             sd = sd(Diameter)) %>%
   mutate_if(is.numeric, round, digits=2) #values, if something is numeric, round to 2 decimals
 
-View(motility_agarconc_summ)
+#View(motility_agarconc_summ)
 ```
 
 Let's get swarm diameters for the ancestor for use as reference lines:
@@ -1857,7 +1782,7 @@ motilityA_p35 <- motilityA_p35[!(is.na(motilityA_p35$Diameter)), ]
 #View(motilityA_p35)
 ```
 
-And plot out:
+And plot out to confirm data are ok:
 ```{r}
 motilityA_p35$Pass<-as.numeric(motilityA_p35$Pass)
 
@@ -1894,16 +1819,17 @@ motilityA_p35_day1p8_summ<-motilityA_p35 %>%
 #View(motilityA_p35_day1p8_summ)
 ```
 
-And plot. First all replicates:
+And plot all replicates:
 ```{r}
 day1p8_WTmedian_A<-median(motilityA_p35$Diameter[motilityA_p35$Community=="WT" &
                                                         motilityA_p35$days==1.833])
 rep.35A.day1p8.facet<-motilityA_p35 %>%
   filter(days==1.833 & Community!="WT") %>%
-  ggplot(aes(x=as.factor(Pass), y=Diameter, color=factor(isolate),)) +
+  ggplot(aes(x=as.factor(Pass), y=Diameter)) +
   #geom_point(size=2) +
   theme_light()+
-  geom_jitter(size=2, width=0, height=0.2)+
+  geom_jitter(size=2, width=0, height=0.2, aes(color=factor(isolate)))+
+  scale_color_viridis_d(option="turbo")+
   #scale_shape_manual(values=c(16,16))+
   geom_hline(aes(yintercept = day1p8_WTmedian_A, group = Pass), colour = 'firebrick4') + #WT median
     theme(
@@ -1915,6 +1841,7 @@ rep.35A.day1p8.facet<-motilityA_p35 %>%
     legend.position = "none"
   )+
   facet_wrap(~Community) + 
+  stat_compare_means(label.x=2, label.y=2.5, aes(label = paste0("p = ", after_stat(p.format))))+
   labs(title="Community A", x="Pass",
        y="Diameter (cm)", color="Isolate")
 rep.35A.day1p8.facet
@@ -2000,15 +1927,16 @@ motilityF_p35_day1p7_summ<-motilityF_p35 %>%
 #View(motilityF_p35_day1p7_summ)
 ```
 
-And plot. First all replicates:
+And plot all replicates:
 ```{r}
 day1p8_WTmedian_F<-median(motilityF_p35$Diameter[motilityF_p35$Community=="WT" &
                                                         motilityF_p35$days==1.67])
 rep.35F.day1p8.facet <- motilityF_p35 %>%
   filter(days==1.67 & Community!="WT") %>%
-  ggplot(aes(x=as.factor(Pass), y=Diameter, color=factor(isolate),)) +
+  ggplot(aes(x=as.factor(Pass), y=Diameter)) +
   theme_light()+
-  geom_jitter(size=2, width=0, height=0.2)+
+  geom_jitter(size=2, width=0, height=0.2, aes(color=factor(isolate)))+
+  scale_color_viridis_d(option="turbo")+
   #scale_shape_manual(values=c(16,16))+
   geom_hline(aes(yintercept = day1p8_WTmedian_F, group = Pass), 
              colour = 'firebrick4') + #WT median
@@ -2020,6 +1948,7 @@ rep.35F.day1p8.facet <- motilityF_p35 %>%
     legend.text = element_text(size=xTextSize)
   )+
   facet_wrap(~Community) + 
+  stat_compare_means(label.x=2, label.y=2.1, aes(label = paste0("p = ", after_stat(p.format))))+
   labs(title="Community F", x="Pass",
        y="", color="Isolate")
 
@@ -2036,9 +1965,11 @@ pCGMotilitySummary<-plot_grid(pmotility_agarconc_LastDay,
 #pCGMotilitySummary<-plot_grid(plswarm_MultAgar_LastDay, 
 #                              rep.35A.day1p8.facet, rep.35F.day1p8.facet,
 #                              ncol=3, rel_widths=c(1, 0.4, 0.5), labels="AUTO")
+
 pCGMotilitySummary
+
 #ggsave("Fig3_pCGMotilitySummary.png", width=10, height=8, units="in", dpi=400)
-ggsave("Fig3_pCGMotilitySummary.tiff", width=228, height=182, units="mm")
+ggsave("Fig3_pCGMotilitySummary.tiff", width=228, height=152, units="mm")
 # 2/3 page 114 mm width
 ```
 
@@ -2064,7 +1995,8 @@ p_nd_diam_F<-nd_diam_F %>%
   geom_point(size=2) +
   #geom_smooth(method = "lm", fill = NA)+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  #scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   labs(title="Nutrient Concentration", 
        x="Time (Days)", y="Diameter", color="Morph", shape="Isolate") +
   theme(text = element_text(size = 14)) +
@@ -2079,7 +2011,8 @@ p_nd_diam_F_lmlines<-nd_diam_F %>%
     mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
   ggplot(aes(x=days, y=Diameter, color=Morph)) +
   geom_point(size=2) +
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  #scale_color_manual(values=c("red2", "darkblue")) +
   #geom_smooth(method = "lm", fill = NA)+
   geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
   theme_light()+
@@ -2166,7 +2099,8 @@ p_nd_diam_slope_F<-nd_diam_slope_F %>%
   ggplot(aes(x=days, y=slope, color=Morph, shape=factor(isolate)))+
     geom_jitter(size=2, width=0.02) +
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  #scale_color_manual(values=c("red2", "darkblue")) +
   labs(title="Nutrient Concentration", 
        x="Time (Days)", y="Expansion (cm) per Hour", color="Morph", shape="Isolate") +
   theme(text = element_text(size = xTextSize)) +
@@ -2182,7 +2116,8 @@ p_nd_diam_slope_F_lmlines_log<-nd_diam_slope_F %>%
     geom_jitter(size=2, width=0.02) +
   geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  #scale_color_manual(values=c("red2", "darkblue")) +
   labs(title="", x="Time (Days)", y="Expansion (cm) per Hour", color="Morph") +
   theme(text = element_text(size = xTextSize)) +
   facet_wrap(~Peptone, ncol=3)
@@ -2244,7 +2179,8 @@ p_nd_diam_A<-nd_diam_A %>%
   geom_point(size=2) +
   #geom_smooth(method = "lm", fill = NA)+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+    #scale_color_manual(values=c("red2", "darkblue")) +
   labs(title="Peptone Concentration", 
        x="Time (h)", y="Diameter", color="Morph", shape="Isolate") +
   theme(text = element_text(size = 14)) +
@@ -2259,7 +2195,8 @@ p_nd_diam_A_lmlines<-nd_diam_A %>%
   filter(Dilution == 0) %>% # only the regular dilution data
   ggplot(aes(x=hours, y=Diameter, color=Morph)) +
   geom_point(size=2) +
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+    #scale_color_manual(values=c("red2", "darkblue")) +
   #geom_smooth(method = "lm", fill = NA)+
   geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
   theme_light()+
@@ -2370,7 +2307,8 @@ p_nd_diam_slope_A<-nd_diam_slope_A %>%
   ggplot(aes(x=hours, y=slope, color=Morph, shape=factor(isolate)))+
     geom_jitter(size=2, width=0.02) +
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  #scale_color_manual(values=c("red2", "darkblue")) +
   labs(title="Peptone Concentration", 
        x="Time (h)", y="Expansion (cm) per Hour", color="Morph", shape="Isolate") +
   theme(text = element_text(size = xTextSize)) +
@@ -2386,7 +2324,8 @@ p_nd_diam_slope_A_lmlines_log<-nd_diam_slope_A %>%
     geom_jitter(size=2, width=0.02) +
   geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  #scale_color_manual(values=c("red2", "darkblue")) +
   labs(title="", x="Time (h)", y="Expansion (cm) per Hour", color="Morph") +
   theme(text = element_text(size = xTextSize)) +
   facet_wrap(~Peptone, ncol=3)
@@ -2428,10 +2367,12 @@ pDilutionDiameterA_lmlines<-nd_diam_A %>%
   filter(SourceWell %in% well_list) %>%
     mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
     ggplot(aes(x=hours, y=Diameter, color=factor(Dilution)))+
-    geom_jitter(size=2, width=0.02)+
+    geom_jitter(size=1, width=0.02)+
     theme_light()+
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
-    theme(text = element_text(size = xTextSize)) +
+  scale_color_brewer(palette = "Dark2") +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
+    theme(text = element_text(size = xTextSize),
+          axis.text.x = element_text(angle=90)) +
   labs(title="", x="Time (h)", y="Diameter (cm)", color="Dilution") +
   facet_grid(vars(Morph), vars(Peptone))
 pDilutionDiameterA_lmlines
@@ -2443,9 +2384,10 @@ p_nd_diam_slope_A_lmlines_log_dilution<-nd_diam_slope_A %>%
   filter(SourceWell %in% well_list) %>%
   mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
   ggplot(aes(x=hours, y=slope, color=factor(Dilution)))+
-    geom_jitter(size=2, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
   theme_light()+
+  scale_color_brewer(palette = "Dark2")+
   ylim(-0.05, 0.15)+
   labs(title="", x="Time (h)", y="Expansion (cm) per Hour", color="Dilution") +
   theme(text = element_text(size = xTextSize)) +
@@ -2458,12 +2400,14 @@ p_nd_diam_slope_A_lmlines_log_dilution_flip<-nd_diam_slope_A %>%
   filter(SourceWell %in% well_list) %>%
   mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
   ggplot(aes(x=hours, y=slope, color=factor(Dilution)))+
-    geom_jitter(size=2, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
   theme_light()+
+  scale_color_brewer(palette = "Dark2") +
   ylim(-0.05, 0.15)+
-  labs(title="", x="Time (h)", y="Expansion (cm) per Hour", color="Dilution") +
-  theme(text = element_text(size = xTextSize)) +
+  labs(title="", x="Time (h)", y="Expansion (cm/h)", color="Dilution") +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
   facet_grid(vars(Morph), vars(Peptone), scales="free_y")
 p_nd_diam_slope_A_lmlines_log_dilution_flip
 ```
@@ -2518,27 +2462,32 @@ nd_diam$Community<-factor(nd_diam$Community,
 
 p_nd_diam_lmlines_log<-nd_diam %>%
   ggplot(aes(x=hours, y=Diameter, color=Morph))+
-    geom_jitter(size=2, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+#  scale_color_manual(values=c("red2", "darkblue")) +
   labs(title="", x="Time (h)", y="Diameter (cm)", color="Morph") +
-  theme(text = element_text(size = xTextSize)) +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
   facet_grid(vars(Peptone), vars(Community), scales="free_x")
 p_nd_diam_lmlines_log
 ```
 Can I get these on a more condensed plot?
 ```{r}
 p_nd_diam_lmlines_log_short<-nd_diam %>%
-  ggplot(aes(x=hours, y=Diameter, color=Morph, linetype=factor(Peptone)))+
-    geom_jitter(size=2, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
+  ggplot(aes(x=hours, y=Diameter, color=Morph, pch=factor(Peptone), linetype=factor(Peptone)))+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
-    scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+    #scale_color_manual(values=c("red2", "darkblue")) +
+  scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+    scale_shape_manual(values=c(15, 16, 18))+
   labs(title="", x="Time (h)", y="Diameter (cm)", 
-       color="Morph", linetype="Peptone") +
-  theme(text = element_text(size = xTextSize)) +
+       color="Morph", pch="Peptone", linetype="Peptone") +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
   facet_wrap(~Community, scales="free_x")
 p_nd_diam_lmlines_log_short
 ```
@@ -2561,46 +2510,64 @@ Plot out the slope data
 ```{r}
 p_nd_diam_slope_lmlines_log<-nd_diam_slope %>%
   ggplot(aes(x=hours, y=slope, color=Morph))+
-    geom_jitter(size=2, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
-  labs(title="", x="Time (h)", y="Expansion (cm) per Hour", color="Morph") +
-  theme(text = element_text(size = xTextSize)) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  #scale_color_manual(values=c("red2", "darkblue")) +
+  labs(title="", x="Time (h)", y="Expansion (cm/h)", color="Morph") +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
   facet_grid(vars(Peptone), vars(Community), scales="free_x")
 p_nd_diam_slope_lmlines_log
 ```
 Condensed:
 ```{r}
 p_nd_diam_slope_lmlines_log_short<-nd_diam_slope %>%
-  ggplot(aes(x=hours, y=slope, color=Morph, linetype=factor(Peptone)))+
-    geom_jitter(size=2, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
+  ggplot(aes(x=hours, y=slope, color=Morph, pch=factor(Peptone), linetype=factor(Peptone)))+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
   theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
+  #scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+  scale_shape_manual(values=c(15, 16, 18))+
   labs(title="", x="Time (h)", y="Expansion (cm/h)", 
-       color="Morph", linetype="Peptone") +
-  theme(text = element_text(size = xTextSize)) +
+       color="Morph", linetype="Peptone", pch="Peptone") +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
   facet_wrap(~Community, scales="free_x")
 p_nd_diam_slope_lmlines_log_short
+```
+```{r}
+p_nd_diam_slope_A_lmlines_log_dilution_flip
 ```
 
 
 And combine the motility data:
 ```{r}
-pNutrientMotility<-plot_grid(p_nd_diam_lmlines_log_short, 
-          p_nd_diam_slope_lmlines_log_short,
-          pDilutionDiameterA_lmlines + scale_color_brewer(palette = "Dark2"),
-          p_nd_diam_slope_A_lmlines_log_dilution_flip + scale_color_brewer(palette = "Dark2"),
-          ncol=1,
-          rel_heights=c(1,1,1.5, 1.5),
-          labels="AUTO"
-          #labels=c("D", "E", "F")
-          )
-pNutrientMotility
-#ggsave("Fig4_NutrientMotility.png", width=8, height=12, units="in", dpi=400)
-ggsave("Fig4_NutrientMotility.tiff", width=160, height=240, units="mm")
+#pNutrientMotility<-plot_grid(p_nd_diam_lmlines_log_short, 
+#          p_nd_diam_slope_lmlines_log_short,
+#          pDilutionDiameterA_lmlines + scale_color_brewer(palette = "Dark2"),
+#          p_nd_diam_slope_A_lmlines_log_dilution_flip + scale_color_brewer(palette = "Dark2"),
+#          ncol=1,
+#          rel_heights=c(1,1,1.5, 1.5),
+#          labels="AUTO"
+#          #labels=c("D", "E", "F")
+#          )
+#pNutrientMotility
+
+
+p_nd_diam_lmlines_log_short  + 
+  p_nd_diam_slope_lmlines_log_short +
+  pDilutionDiameterA_lmlines  + 
+  p_nd_diam_slope_A_lmlines_log_dilution_flip + 
+  plot_annotation(tag_levels = 'A') +
+       plot_layout(guides = 'collect')
+
+
+#ggsave("Fig4_NutrientMotility.png", width=12, height=7, units="in", dpi=400)
+ggsave("Fig4_NutrientMotility.tiff", width=240, height=180, units="mm")
 # one column 80 mm width
 ```
 
