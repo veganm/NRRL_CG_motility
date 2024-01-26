@@ -18,6 +18,7 @@ First, load the necessary:
 # ggpubr 0.6.0
 # growthcurver 0.3.1
 # growthrates 0.8.4
+# lmtest 0.9-40
 # patchwork 1.1.3
 # purrr 1.0.2
 # RColorBrewer 1.1-3
@@ -29,7 +30,7 @@ First, load the necessary:
 # vegan 2.6-4
 # MASS 7.3-60
 pacman::p_load(tidyverse, cowplot, vegan, FactoMineR, readxl, ggpubr, MASS, RColorBrewer,
-               readxl, growthrates, growthcurver, patchwork, betareg)
+               readxl, growthrates, growthcurver, patchwork, betareg, lmtest)
 ```
  
 Define global:
@@ -340,7 +341,7 @@ pVariantEmergenceRichness_CX<-NRRLMulti2 %>%
         axis.title=element_text(size=xTextSize),
         plot.title=element_text(hjust=0.5, size=xTextSize) 
   )+
-  labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: Chryseobacterium")+
+  labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: \nChryseobacterium")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
 pVariantEmergenceRichness_CX
@@ -361,7 +362,7 @@ pVariantEmergenceRichness_CG<-NRRLMulti2 %>%
         axis.title=element_text(size=xTextSize),
         plot.title=element_text(hjust=0.5, size=xTextSize) 
   )+
-  labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: C. gleum")+
+  labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: \nC. gleum")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
 pVariantEmergenceRichness_CG
@@ -421,10 +422,10 @@ pVariantEmergenceRichness_MO<-NRRLMulti2 %>%
         axis.title=element_text(size=xTextSize),
         plot.title=element_text(hjust=0.5, size=xTextSize) 
   )+
-  labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: M. oxydans")+
+  labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: \nM. oxydans")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
-#pVariantEmergenceRichness_MO
+pVariantEmergenceRichness_MO
 
 pVariantEmergenceH_MO<-NRRLMulti2 %>%
   ggplot(aes(x=factor(Pass), y=H, color=factor(varMO)))+
@@ -453,7 +454,7 @@ pVariantEmergenceIS_MO<-NRRLMulti2 %>%
         axis.title=element_text(size=xTextSize),
         plot.title=element_text(hjust=0.5, size=xTextSize) 
   )+
-  labs(y="Inverse Shannon", x="Pass", title="M. oxydans")+
+  labs(y="Inverse Simpson", x="Pass", title="M. oxydans")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
 #pVariantEmergenceIS_MO
@@ -1983,7 +1984,7 @@ Note that there were no ancestor controls here - we are instead comparing across
 First, read in data:
 ```{r}
 nd_diam_F <- read_excel("CG_motility_all.xlsx", sheet = "nutrientF")
-view(nd_diam_F)
+#view(nd_diam_F)
 nd_diam_F<-nd_diam_F %>%
     mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) # recode labels
 ```
@@ -2046,7 +2047,7 @@ nd_diam_slope_F<-tibble(SourceWell=rep(my_wells,times=5),
                               rep(my_times[5], my_len),
                               rep(my_times[6], my_len)),
                       slope=NA)
-view(nd_diam_slope_F)
+#view(nd_diam_slope_F)
 ```
 
 And set up a loop:
@@ -2141,24 +2142,13 @@ nd_diam_summary_F <- nd_diam_F %>%
 View(nd_diam_summary_F)
 ```
 
-Plot out together:
-```{r}
-plot_grid(p_nd_diam_F_lmlines, p_nd_diam_slope_F_lmlines_log, align="v", ncol=1, labels="AUTO")
-#ggsave("pNutrientColonyDiameter_F_lmlines.png", width=8, height=8, units="in", dpi=400)
-```
-and without lines
-```{r}
-plot_grid(p_nd_diam_F, p_nd_diam_slope_F, align="v", ncol=1, labels="AUTO")
-#ggsave("pNutrientColonyDiameter_F.png", width=8, height=8, units="in", dpi=400)
-```
-
 #### Community A data
 Also pass 6, this time with ancestor and with some extra dilutions. Rows E-G are 10X serial dilutions of the corresponding wells in row A.
 
 First, read in data:
 ```{r}
 nd_diam_A <- read_excel("CG_motility_all.xlsx", sheet = "nutrientA")
-view(nd_diam_A)
+#view(nd_diam_A)
 ```
 
 Clean up:
@@ -2334,18 +2324,6 @@ p_nd_diam_slope_A_lmlines_log
 
 What happens with dilution of the original inoculum?
 ```{r}
-nd_diam_A %>%
-  filter(Dilution!=0) %>%
-    ggplot(aes(x=hours, y=Diameter, color=Morph))+
-    geom_jitter(size=2, width=0.02)+
-    theme_light()+
-    scale_color_manual(values=c("red2", "darkblue")) +
-  labs(title="Inoculum Dilution", x="Time (h)", y="Diameter (cm)", color="Morph") +
-  facet_wrap(~Dilution)
-  
-```
-How about the other way around
-```{r}
 well_list=c("A1", "A4", "A7",
             "E1", "E4", "E7",
             "F1", "F4", "F7",
@@ -2415,7 +2393,7 @@ p_nd_diam_slope_A_lmlines_log_dilution_flip
 Summarize the data (across technical replicates)
 ```{r}
 nd_diam_summary_A <- nd_diam_A %>%
-  filter(Dilution==0) %>% # just the regular stuff, others don't have replicates
+  filter(Dilution==0) %>% # just the regular stuff, to combine with other data set
   group_by(Peptone, Morph, Pass, isolate, days) %>% #pick what you want to summarize
   summarize(min = min(Diameter), 
             max = max(Diameter), #saying what we want to summarize, stats and data
@@ -2429,18 +2407,6 @@ nd_diam_summary_A <- nd_diam_A %>%
 #View(nd_diam_summary_A)
 ```
 
-Plot out together:
-```{r}
-plot_grid(p_nd_diam_A_lmlines, p_nd_diam_slope_A_lmlines_log, align="v", ncol=1, labels="AUTO")
-#ggsave("pNutrientColonyDiameter_A_lmlines.png", width=8, height=8, units="in", dpi=400)
-```
-and the dilutions
-```{r}
-plot_grid(pDilutionDiameterA_lmlines,
-          p_nd_diam_slope_A_lmlines_log_dilution, 
-         ncol=1, labels="AUTO")
-#ggsave("pNutrientColonyDiameter_Dilutions_A.png", width=8, height=8, units="in", dpi=400)
-```
 
 #### Combining the data
 Let's put the F2 and A2 nutrient data sets together
@@ -2539,10 +2505,6 @@ p_nd_diam_slope_lmlines_log_short<-nd_diam_slope %>%
   facet_wrap(~Community, scales="free_x")
 p_nd_diam_slope_lmlines_log_short
 ```
-```{r}
-p_nd_diam_slope_A_lmlines_log_dilution_flip
-```
-
 
 And combine the motility data:
 ```{r}
@@ -2569,6 +2531,139 @@ p_nd_diam_lmlines_log_short  +
 #ggsave("Fig4_NutrientMotility.png", width=12, height=7, units="in", dpi=400)
 ggsave("Fig4_NutrientMotility.tiff", width=240, height=180, units="mm")
 # one column 80 mm width
+```
+
+Statistics. For simplicity we transform the data so the fit is linear:
+```{r}
+nd_diam<-nd_diam %>%
+  mutate(logtime=log(hours))
+```
+
+check
+```{r}
+nd_diam %>%
+  ggplot(aes(x=logtime, y=Diameter, color=Morph, pch=factor(Peptone), linetype=factor(Peptone)))+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ x, fill="NA", linewidth=0.7)+
+  theme_light()+
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+    #scale_color_manual(values=c("red2", "darkblue")) +
+  scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+    scale_shape_manual(values=c(15, 16, 18))+
+  labs(title="", x="Time (h)", y="Diameter (cm)", 
+       color="Morph", pch="Peptone", linetype="Peptone") +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
+  facet_wrap(~Community, scales="free_x")
+```
+Nested regressions for LRTs, on the raw data. 
+```{r}
+nd_diam$Peptone<-as.factor(nd_diam$Peptone) # first make these factors 
+nd_diam$Morph<-as.factor(nd_diam$Morph) 
+nd_diam$Pass<-as.factor(nd_diam$Pass)
+
+# Nested models with the most terms
+nd_diam_model_full <- lm(Diameter ~ logtime + Peptone + Morph + Community, data=nd_diam)
+nd_diam_model_pooled<- lm(Diameter ~ logtime + Peptone + Morph, data=nd_diam)
+```
+
+LRTs. Do we need community ID as a factor?
+```{r}
+lrtest(nd_diam_model_full, nd_diam_model_pooled)
+```
+Apparently so. Make the reduced models accordingly:
+```{r}
+nd_diam_model_pept<-lm(Diameter ~ logtime + Peptone + Community, data=nd_diam)
+nd_diam_model_morph<-lm(Diameter ~ logtime + Morph + Community, data=nd_diam)
+nd_diam_model_minimal<-lm(Diameter ~ logtime + Community, data=nd_diam)
+```
+
+Next. Contribution of peptone
+```{r}
+lrtest(nd_diam_model_full, nd_diam_model_morph)
+```
+
+And of morph
+```{r}
+lrtest(nd_diam_model_full, nd_diam_model_pept)
+```
+
+Check the specific interactions within morphotype. Peptone in original morphs:
+```{r}
+nd_diam_model_ori_full<-nd_diam %>%
+  filter(Morph == "Original") %>%
+  lm(Diameter~logtime + Peptone + Community, data=.)
+summary(nd_diam_model_ori_full)
+```
+Now for slopes. First manage data frame - establish factors and log time
+```{r}
+nd_diam_slope <- nd_diam_slope %>%
+  mutate(logtime=log(hours))
+nd_diam_slope$Peptone<-as.factor(nd_diam_slope$Peptone) # first make these factors 
+nd_diam_slope$Morph<-as.factor(nd_diam_slope$Morph) #
+```
+
+Check
+```{r}
+nd_diam_slope %>%
+  ggplot(aes(x=hours, y=slope, color=Morph, pch=Peptone, linetype=Peptone))+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ x, fill="NA", linewidth=0.7)+
+  theme_light()+
+  #scale_color_manual(values=c("red2", "darkblue")) +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+  scale_shape_manual(values=c(15, 16, 18))+
+  labs(title="", x="Time (h)", y="Expansion (cm/h)", 
+       color="Morph", linetype="Peptone", pch="Peptone") +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
+  facet_wrap(~Community, scales="free_x")
+```
+
+And regressions on slope. Full model:
+```{r}
+# Nested models
+nd_diam_slope_model_full <- lm(slope ~ logtime + Peptone + Morph + Community, data=nd_diam_slope)
+summary(nd_diam_slope_model_full)
+```
+
+First LRT. Do we need community ID as a factor?
+```{r}
+nd_diam_slope_model_pooled<- lm(slope ~ logtime + Peptone + Morph, data=nd_diam_slope)
+lrtest(nd_diam_slope_model_full, nd_diam_slope_model_pooled)
+```
+Apparently so. Make the reduced models accordingly:
+```{r}
+nd_diam_slope_model_pept<-lm(slope ~ logtime + Peptone + Community, data=nd_diam_slope)
+nd_diam_slope_model_morph<-lm(slope ~ logtime + Morph + Community, data=nd_diam_slope)
+nd_diam_slope_model_minimal<-lm(slope ~ logtime + Community, data=nd_diam_slope)
+```
+
+Next. Contribution of peptone
+```{r}
+lrtest(nd_diam_slope_model_full, nd_diam_slope_model_morph)
+```
+
+And of morph
+```{r}
+lrtest(nd_diam_slope_model_full, nd_diam_slope_model_pept)
+```
+
+Check the specific interactions within morphotype. Full model for original morphs only:
+```{r}
+nd_diam_model_slope_ori_full<-nd_diam_slope %>%
+  filter(Morph == "Original") %>%
+  lm(slope~logtime + Peptone + Community, data=.)
+summary(nd_diam_model_slope_ori_full)
+```
+
+And for alternate morphs:
+```{r}
+nd_diam_model_slope_alt_full<-nd_diam_slope %>%
+  filter(Morph == "Alternate") %>%
+  lm(slope~logtime + Peptone + Community, data=.)
+summary(nd_diam_model_slope_alt_full)
 ```
 
 
