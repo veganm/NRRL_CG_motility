@@ -30,7 +30,7 @@ First, load the necessary:
 # vegan 2.6-4
 # MASS 7.3-60
 pacman::p_load(tidyverse, cowplot, vegan, FactoMineR, readxl, ggpubr, MASS, RColorBrewer,
-               readxl, growthrates, growthcurver, patchwork, betareg, lmtest)
+               readxl, growthrates, growthcurver, patchwork, betareg, lmtest, lme4)
 ```
  
 Define global:
@@ -1989,27 +1989,10 @@ nd_diam_F<-nd_diam_F %>%
     mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) # recode labels
 ```
 
-Data are already in a ggplot-usable format, no need to modify. Let's go ahead and plot:
-```{r}
-p_nd_diam_F<-nd_diam_F %>%
-  ggplot(aes(x=days, y=Diameter, color=Morph, shape=factor(isolate))) +
-  geom_point(size=2) +
-  #geom_smooth(method = "lm", fill = NA)+
-  theme_light()+
-  #scale_color_manual(values=c("red2", "darkblue")) +
-  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-  labs(title="Nutrient Concentration", 
-       x="Time (Days)", y="Diameter", color="Morph", shape="Isolate") +
-  theme(text = element_text(size = 14)) +
-  facet_wrap(~Peptone, ncol=3)
-p_nd_diam_F
-```
+Data are already in a ggplot-usable format, no need to modify. Let's go ahead and plot.
 Clearly, all isolates and replicates within a given morph are behaving similarly. Interestingly, the standard NGM peptone concentration (1X) seems to allow larger diameters than either the low or high peptone condition, but only really for the original isolates.
-
-let's get some log-linear fits.
 ```{r}
-p_nd_diam_F_lmlines<-nd_diam_F %>%
-    mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
+nd_diam_F %>%
   ggplot(aes(x=days, y=Diameter, color=Morph)) +
   geom_point(size=2) +
   scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
@@ -2021,7 +2004,6 @@ p_nd_diam_F_lmlines<-nd_diam_F %>%
        x="Time (Days)", y="Diameter", color="Morph") +
   theme(text = element_text(size = 14)) +
   facet_wrap(~Peptone, ncol=3)
-p_nd_diam_F_lmlines
 ```
 
 Can we get slopes between time points? First let's make a unique ID:
@@ -2089,30 +2071,14 @@ Add days:
 ```{r}
 nd_diam_slope_F<- nd_diam_slope_F %>%
   mutate(days=hours/24)
-nd_diam_slope_F<-nd_diam_slope_F %>%
-    mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) # recode labels
+#nd_diam_slope_F<-nd_diam_slope_F %>%
+#    mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) # recode labels
 ```
 
 
-Plot out slopes:
+Plot out slopes. Expansion rate of the original morphs spikes then drops after about 24 hours in low and high peptone but not in the medium peptone condition. Whereas expansion of the alternate morphs is nearly flat across conditions - the high-peptone colonies started larger (as of 17h) but didn't really expand any faster from there.
 ```{r}
-p_nd_diam_slope_F<-nd_diam_slope_F %>%
-  ggplot(aes(x=days, y=slope, color=Morph, shape=factor(isolate)))+
-    geom_jitter(size=2, width=0.02) +
-  theme_light()+
-  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-  #scale_color_manual(values=c("red2", "darkblue")) +
-  labs(title="Nutrient Concentration", 
-       x="Time (Days)", y="Expansion (cm) per Hour", color="Morph", shape="Isolate") +
-  theme(text = element_text(size = xTextSize)) +
-  facet_wrap(~Peptone, ncol=3)
-p_nd_diam_slope_F
-```
-Expansion rate of the original morphs spikes then drops after about 24 hours in low and high peptone but not in the medium peptone condition. Whereas expansion of the alternate morphs is nearly flat across conditions - the high-peptone colonies started larger (as of 17h) but didn't really expand any faster from there.
-
-Plot with log fits
-```{r}
-p_nd_diam_slope_F_lmlines_log<-nd_diam_slope_F %>%
+nd_diam_slope_F %>%
   ggplot(aes(x=days, y=slope, color=Morph))+
     geom_jitter(size=2, width=0.02) +
   geom_smooth(method="lm", formula = y ~ log(x), fill="NA")+
@@ -2122,7 +2088,6 @@ p_nd_diam_slope_F_lmlines_log<-nd_diam_slope_F %>%
   labs(title="", x="Time (Days)", y="Expansion (cm) per Hour", color="Morph") +
   theme(text = element_text(size = xTextSize)) +
   facet_wrap(~Peptone, ncol=3)
-p_nd_diam_slope_F_lmlines_log
 ```
 
 
@@ -2161,27 +2126,10 @@ nd_diam_A<-nd_diam_A %>%
 ```
 
 
-Data are already in a ggplot-usable format, no need to modify. Let's go ahead and plot:
-```{r}
-p_nd_diam_A<-nd_diam_A %>%
-  filter(Dilution == 0) %>% # only the regular dilution data
-  ggplot(aes(x=hours, y=Diameter, color=Morph, shape=factor(isolate))) +
-  geom_point(size=2) +
-  #geom_smooth(method = "lm", fill = NA)+
-  theme_light()+
-  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-    #scale_color_manual(values=c("red2", "darkblue")) +
-  labs(title="Peptone Concentration", 
-       x="Time (h)", y="Diameter", color="Morph", shape="Isolate") +
-  theme(text = element_text(size = 14)) +
-  facet_wrap(~Peptone, ncol=3)
-p_nd_diam_A
-```
+Data are already in a ggplot-usable format, no need to modify. Let's go ahead and plot. 
 Clearly, all isolates and replicates within a given morph are behaving similarly. Interestingly, the standard NGM peptone concentration (1X) seems to allow larger diameters than either the low or high peptone condition, but only for the original isolates.
-
-let's get some log-linear fits.
 ```{r}
-p_nd_diam_A_lmlines<-nd_diam_A %>%
+nd_diam_A %>%
   filter(Dilution == 0) %>% # only the regular dilution data
   ggplot(aes(x=hours, y=Diameter, color=Morph)) +
   geom_point(size=2) +
@@ -2194,7 +2142,6 @@ p_nd_diam_A_lmlines<-nd_diam_A %>%
        x="Time (h)", y="Diameter", color="Morph") +
   theme(text = element_text(size = 14)) +
   facet_wrap(~Peptone, ncol=3)
-p_nd_diam_A_lmlines
 ```
 
 Can we get slopes between time points? First let's make a unique ID:
@@ -2202,7 +2149,7 @@ Can we get slopes between time points? First let's make a unique ID:
 nd_diam_A <- nd_diam_A %>%
   unite("ID", c(SourceWell, Peptone, Dilution), remove=FALSE) # create an ID by merging features
 #View(nd_diam_A)
-unique(nd_diam_A$ID)
+#unique(nd_diam_A$ID)
 ```
 
 Using this ID we can trace individual replicates over time points. 
@@ -2289,26 +2236,9 @@ idx<-which(nd_diam_slope_A$slope<0)
 nd_diam_slope_A$slope[idx]<-0
 ```
 
-Plot out slopes:
+Plot out slopes (Log fits) to check
 ```{r}
-p_nd_diam_slope_A<-nd_diam_slope_A %>%
-  filter(Dilution==0) %>% # just the regular stuff first
-    mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
-  ggplot(aes(x=hours, y=slope, color=Morph, shape=factor(isolate)))+
-    geom_jitter(size=2, width=0.02) +
-  theme_light()+
-  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-  #scale_color_manual(values=c("red2", "darkblue")) +
-  labs(title="Peptone Concentration", 
-       x="Time (h)", y="Expansion (cm) per Hour", color="Morph", shape="Isolate") +
-  theme(text = element_text(size = xTextSize)) +
-  facet_wrap(~Peptone, ncol=3)
-p_nd_diam_slope_A
-```
-
-Log fits
-```{r}
-p_nd_diam_slope_A_lmlines_log<-nd_diam_slope_A %>%
+nd_diam_slope_A %>%
   filter(Dilution==0) %>% # just the regular stuff first
   ggplot(aes(x=hours, y=slope, color=Morph))+
     geom_jitter(size=2, width=0.02) +
@@ -2319,31 +2249,21 @@ p_nd_diam_slope_A_lmlines_log<-nd_diam_slope_A %>%
   labs(title="", x="Time (h)", y="Expansion (cm) per Hour", color="Morph") +
   theme(text = element_text(size = xTextSize)) +
   facet_wrap(~Peptone, ncol=3)
-p_nd_diam_slope_A_lmlines_log
 ```
 
 What happens with dilution of the original inoculum?
 ```{r}
+# well IDs for dilution series inocula
 well_list=c("A1", "A4", "A7",
             "E1", "E4", "E7",
             "F1", "F4", "F7",
             "G1", "G4", "G7")
-pDilutionDiameterA<-nd_diam_A %>%
-  filter(SourceWell %in% well_list) %>%
-    mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
-    ggplot(aes(x=hours, y=Diameter, color=factor(Dilution)))+
-    geom_jitter(size=2, width=0.02)+
-    theme_light()+
-  labs(title="", x="Time (h)", y="Diameter (cm)", color="Dilution") +
-  facet_grid(vars(Morph), vars(Peptone))
-pDilutionDiameterA
 ```
 
-What happens when we change dilution of the inoculum? With log fits:
+Plot data with log fits:
 ```{r}
-pDilutionDiameterA_lmlines<-nd_diam_A %>%
+nd_diam_A %>%
   filter(SourceWell %in% well_list) %>%
-    mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
     ggplot(aes(x=hours, y=Diameter, color=factor(Dilution)))+
     geom_jitter(size=1, width=0.02)+
     theme_light()+
@@ -2353,30 +2273,13 @@ pDilutionDiameterA_lmlines<-nd_diam_A %>%
           axis.text.x = element_text(angle=90)) +
   labs(title="", x="Time (h)", y="Diameter (cm)", color="Dilution") +
   facet_grid(vars(Morph), vars(Peptone))
-pDilutionDiameterA_lmlines
 ```
 
 Spreading rates?
 ```{r}
-p_nd_diam_slope_A_lmlines_log_dilution<-nd_diam_slope_A %>%
-  filter(SourceWell %in% well_list) %>%
-  mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
-  ggplot(aes(x=hours, y=slope, color=factor(Dilution)))+
-    geom_jitter(size=1, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
-  theme_light()+
-  scale_color_brewer(palette = "Dark2")+
-  ylim(-0.05, 0.15)+
-  labs(title="", x="Time (h)", y="Expansion (cm) per Hour", color="Dilution") +
-  theme(text = element_text(size = xTextSize)) +
-  facet_grid(vars(Peptone), vars(Morph))
-p_nd_diam_slope_A_lmlines_log_dilution
-```
-Reverse the axes?
-```{r}
 p_nd_diam_slope_A_lmlines_log_dilution_flip<-nd_diam_slope_A %>%
   filter(SourceWell %in% well_list) %>%
-  mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
+#  mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original")) %>% # recode labels
   ggplot(aes(x=hours, y=slope, color=factor(Dilution)))+
     geom_jitter(size=1, width=0.02) +
   geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
@@ -2388,6 +2291,46 @@ p_nd_diam_slope_A_lmlines_log_dilution_flip<-nd_diam_slope_A %>%
         axis.text.x = element_text(angle=90)) +
   facet_grid(vars(Morph), vars(Peptone), scales="free_y")
 p_nd_diam_slope_A_lmlines_log_dilution_flip
+```
+Expansion rates grouped by inoculum density 
+```{r}
+p_nd_diam_slope_A_dilutions<-nd_diam_slope_A %>%
+  filter(SourceWell %in% well_list) %>%
+  ggplot(aes(x=hours, y=slope, color=factor(Morph), pch=factor(Peptone), linetype=factor(Peptone)))+
+    geom_jitter(size=1, width=0.02) +
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
+  theme_light()+
+  #scale_color_brewer(palette = "Dark2") +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+    scale_shape_manual(values=c(15, 16, 18))+
+  ylim(-0.05, 0.15)+
+  labs(title="", x="Time (h)", y="Expansion (cm/h)", color="Morph", pch="Peptone", linetype="Peptone") +
+  theme(text = element_text(size = xTextSize),
+        axis.text.x = element_text(angle=90)) +
+  #facet_grid(vars(Dilution), vars(Peptone), scales="free_y")
+  facet_wrap(~Dilution, nrow=1)
+p_nd_diam_slope_A_dilutions
+```
+Same idea with the raw data:
+```{r}
+p_nd_diam_A_dilutions<-nd_diam_A %>%
+  filter(SourceWell %in% well_list) %>%
+    ggplot(aes(x=hours, y=Diameter, color=factor(Morph), pch=factor(Peptone), linetype=factor(Peptone)))+
+    geom_jitter(size=1, width=0.02)+
+    theme_light()+
+  #scale_color_brewer(palette = "Dark2") +
+  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
+  scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
+    scale_shape_manual(values=c(15, 16, 18))+
+  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
+    theme(text = element_text(size = xTextSize),
+          axis.text.x = element_text(angle=90)) +
+  labs(title="", x="Time (h)", y="Diameter (cm)", color="Morph",
+       pch="Peptone", linetype="Peptone") +
+  #facet_grid(vars(Morph), vars(Peptone))
+  facet_wrap(~Dilution, nrow = 1)
+p_nd_diam_A_dilutions
 ```
 
 Summarize the data (across technical replicates)
@@ -2426,21 +2369,6 @@ Plot out together?
 nd_diam$Community<-factor(nd_diam$Community,
                           levels=c("ANC", "A2", "F2"))
 
-p_nd_diam_lmlines_log<-nd_diam %>%
-  ggplot(aes(x=hours, y=Diameter, color=Morph))+
-    geom_jitter(size=1, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
-  theme_light()+
-  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-#  scale_color_manual(values=c("red2", "darkblue")) +
-  labs(title="", x="Time (h)", y="Diameter (cm)", color="Morph") +
-  theme(text = element_text(size = xTextSize),
-        axis.text.x = element_text(angle=90)) +
-  facet_grid(vars(Peptone), vars(Community), scales="free_x")
-p_nd_diam_lmlines_log
-```
-Can I get these on a more condensed plot?
-```{r}
 p_nd_diam_lmlines_log_short<-nd_diam %>%
   ggplot(aes(x=hours, y=Diameter, color=Morph, pch=factor(Peptone), linetype=factor(Peptone)))+
     geom_jitter(size=1, width=0.02) +
@@ -2474,21 +2402,6 @@ rm(temp1, temp2)
 
 Plot out the slope data
 ```{r}
-p_nd_diam_slope_lmlines_log<-nd_diam_slope %>%
-  ggplot(aes(x=hours, y=slope, color=Morph))+
-    geom_jitter(size=1, width=0.02) +
-  geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
-  theme_light()+
-  scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
-  #scale_color_manual(values=c("red2", "darkblue")) +
-  labs(title="", x="Time (h)", y="Expansion (cm/h)", color="Morph") +
-  theme(text = element_text(size = xTextSize),
-        axis.text.x = element_text(angle=90)) +
-  facet_grid(vars(Peptone), vars(Community), scales="free_x")
-p_nd_diam_slope_lmlines_log
-```
-Condensed:
-```{r}
 p_nd_diam_slope_lmlines_log_short<-nd_diam_slope %>%
   ggplot(aes(x=hours, y=slope, color=Morph, pch=factor(Peptone), linetype=factor(Peptone)))+
     geom_jitter(size=1, width=0.02) +
@@ -2508,22 +2421,10 @@ p_nd_diam_slope_lmlines_log_short
 
 And combine the motility data:
 ```{r}
-#pNutrientMotility<-plot_grid(p_nd_diam_lmlines_log_short, 
-#          p_nd_diam_slope_lmlines_log_short,
-#          pDilutionDiameterA_lmlines + scale_color_brewer(palette = "Dark2"),
-#          p_nd_diam_slope_A_lmlines_log_dilution_flip + scale_color_brewer(palette = "Dark2"),
-#          ncol=1,
-#          rel_heights=c(1,1,1.5, 1.5),
-#          labels="AUTO"
-#          #labels=c("D", "E", "F")
-#          )
-#pNutrientMotility
-
-
 p_nd_diam_lmlines_log_short  + 
   p_nd_diam_slope_lmlines_log_short +
-  pDilutionDiameterA_lmlines  + 
-  p_nd_diam_slope_A_lmlines_log_dilution_flip + 
+  p_nd_diam_A_dilutions +
+  p_nd_diam_slope_A_dilutions +
   plot_annotation(tag_levels = 'A') +
        plot_layout(guides = 'collect')
 
@@ -2533,7 +2434,7 @@ ggsave("Fig4_NutrientMotility.tiff", width=240, height=180, units="mm")
 # one column 80 mm width
 ```
 
-Statistics. For simplicity we transform the data so the fit is linear:
+Statistics for panels A-B, comparing across morphs, communities, and peptone concentrations for a fixed inoculum density. For simplicity we transform the data so the fit is linear:
 ```{r}
 nd_diam<-nd_diam %>%
   mutate(logtime=log(hours))
@@ -2664,6 +2565,96 @@ nd_diam_model_slope_alt_full<-nd_diam_slope %>%
   filter(Morph == "Alternate") %>%
   lm(slope~logtime + Peptone + Community, data=.)
 summary(nd_diam_model_slope_alt_full)
+```
+Now statistics for the diluted inoculum data. For simplicity we filter & transform the data so the fit is linear:
+```{r}
+nd_diam_A_dilutions<-nd_diam_A %>%
+  filter(SourceWell %in% well_list) %>% # filter only the data we need
+  mutate(logtime=log(hours))
+
+nd_diam_A_slope_dilutions<-nd_diam_slope_A %>%
+  filter(SourceWell %in% well_list) %>% # filter only the data we need
+  mutate(logtime=log(hours))
+
+nd_diam_A_dilutions$Peptone<-as.factor(nd_diam_A_dilutions$Peptone) # make these factors 
+nd_diam_A_dilutions$Morph<-as.factor(nd_diam_A_dilutions$Morph) 
+nd_diam_A_dilutions$Dilution<-as.factor(nd_diam_A_dilutions$Dilution)
+
+nd_diam_A_slope_dilutions$Peptone<-as.factor(nd_diam_A_slope_dilutions$Peptone) # make these factors 
+nd_diam_A_slope_dilutions$Morph<-as.factor(nd_diam_A_slope_dilutions$Morph) 
+nd_diam_A_slope_dilutions$Dilution<-as.factor(nd_diam_A_slope_dilutions$Dilution)
+```
+
+Establish the highest-order model:
+```{r}
+nd_diam_A_dilutions_model_full <- lm(Diameter ~ logtime + Peptone + Morph + Dilution , data=nd_diam_A_dilutions)
+summary(nd_diam_A_dilutions_model_full)
+```
+
+Reduced model for morph:
+```{r}
+nd_diam_A_dilutions_model_morphless <- lm(Diameter ~ logtime + Peptone + Dilution , data=nd_diam_A_dilutions)
+lrtest(nd_diam_A_dilutions_model_full, nd_diam_A_dilutions_model_morphless)
+```
+
+ok now let's separate the morphs:
+```{r}
+nd_diam_A_dilutions_o<-nd_diam_A_dilutions %>%
+  filter(Morph=="Original")
+nd_diam_A_dilutions_a<-nd_diam_A_dilutions %>%
+  filter(Morph=="Alternate")
+
+nd_diam_A_slope_dilutions_o<- nd_diam_A_slope_dilutions %>%
+  filter(Morph=="Original")
+nd_diam_A_slope_dilutions_a<- nd_diam_A_slope_dilutions %>%
+  filter(Morph=="Alternate")
+```
+
+Regressions for raw data, alternate morphs, inoculum dilutions. Want a mixed effects model here to check for effects on intercept:
+```{r}
+nd_diam_A_dilutions_a_lme<-lmer(Diameter ~ logtime + Peptone + (1|Dilution), data=nd_diam_A_dilutions_a, REML = F)
+summary(nd_diam_A_dilutions_a_lme)
+coef(nd_diam_A_dilutions_a_lme)
+confint(nd_diam_A_dilutions_a_lme)
+```
+Do we need the peptone term at all?
+```{r}
+nd_diam_A_dilutions_a_lme3<-lmer(Diameter ~ logtime + (1|Dilution), data=nd_diam_A_dilutions_a, REML = F)
+anova(nd_diam_A_dilutions_a_lme3, nd_diam_A_dilutions_a_lme)
+```
+Yes, we should keep it. The model keeps going singular when slopes are added as a mixed effect, so let's just do this one as LRT on the expansion rate data:
+```{r}
+temp<-lm(slope ~ Peptone + Dilution, data=nd_diam_A_slope_dilutions_a)
+temp2<-lm(slope ~ Peptone, data=nd_diam_A_slope_dilutions_a)
+lrtest(temp, temp2)
+```
+
+For original morphs now.
+```{r}
+nd_diam_A_dilutions_o_lme<-lmer(Diameter ~ logtime + Peptone + (1|Dilution), data=nd_diam_A_dilutions_o, REML = F)
+summary(nd_diam_A_dilutions_o_lme)
+coef(nd_diam_A_dilutions_o_lme)
+confint(nd_diam_A_dilutions_o_lme)
+```
+There's a problem with the fits again - corr -1 indicates that the full slope-intercept models aren't fitting well.
+```{r}
+nd_diam_A_dilutions_o_lme3<-lmer(Diameter ~ logtime + (1|Dilution), data=nd_diam_A_dilutions_o, REML = F)
+anova(nd_diam_A_dilutions_o_lme3, nd_diam_A_dilutions_o_lme)
+#summary(nd_diam_A_dilutions_o_lme3)
+```
+The model keeps going singular when slopes are added as a mixed effect, so let's do LRT on the expansion rate data again:
+```{r}
+temp<-lm(slope ~ Peptone + Dilution, data=nd_diam_A_slope_dilutions_o)
+temp2<-lm(slope ~ Peptone, data=nd_diam_A_slope_dilutions_o)
+lrtest(temp, temp2)
+```
+Consider only the lowest dilution:
+```{r}
+nd_diam_A_slope_dilutions_o<-nd_diam_A_slope_dilutions_o %>%
+  mutate(LowD = (Dilution=="-3"))
+temp<-lm(slope ~ Peptone + LowD, data=nd_diam_A_slope_dilutions_o)
+temp2<-lm(slope ~ Peptone, data=nd_diam_A_slope_dilutions_o)
+lrtest(temp, temp2)
 ```
 
 
