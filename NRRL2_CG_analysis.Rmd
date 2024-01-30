@@ -2414,8 +2414,8 @@ p_nd_diam_lmlines_log_short  +
        plot_layout(guides = 'collect')
 
 
-#ggsave("Fig4_NutrientMotility.png", width=12, height=7, units="in", dpi=400)
-ggsave("Fig4_NutrientMotility.tiff", width=240, height=180, units="mm")
+#ggsave("Fig3_NutrientMotility.png", width=12, height=7, units="in", dpi=400)
+ggsave("Fig3_NutrientMotility.tiff", width=240, height=180, units="mm")
 # one column 80 mm width
 ```
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
