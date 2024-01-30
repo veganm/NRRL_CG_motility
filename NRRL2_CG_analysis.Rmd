@@ -101,7 +101,7 @@ MultiF<-data.frame(Pass=NRRLMulti2$Pass,
                    Rep=NRRLMulti2$Rep, 
                    bact, values)
 MultiF<-as_tibble(MultiF)
-glimpse(MultiF)
+#glimpse(MultiF)
 
 # plot
 pMultiF<-MultiF %>%
@@ -122,7 +122,7 @@ pMultiF<-MultiF %>%
     )+
   labs(y="Relative Abundance", x="", title="Worm+")+
   facet_wrap(~Pass)
-pMultiF
+#pMultiF
 ```
 
 Read in the community composition data from the no-worm evolution experiment:
@@ -134,7 +134,7 @@ MultiNoWorm$Set<-substr(MultiNoWorm$Rep,1,1)
 MultiNoWorm$ID<-MultiNoWorm$Rep
 MultiNoWorm$Rep<-as.numeric(substr(MultiNoWorm$ID,2,2))
 MultiNoWorm<-MultiNoWorm %>% relocate(ID, Set)
-glimpse(MultiNoWorm)
+#glimpse(MultiNoWorm)
 ```
 make stacked bar plots of relative abundance:
 ```{r}
@@ -156,7 +156,7 @@ MultiF_NoWorm<-data.frame(Pass=MultiNoWorm$Pass,
                    Rep=MultiNoWorm$Rep, 
                    bact, values)
 MultiF_NoWorm<-as_tibble(MultiF_NoWorm)
-glimpse(MultiF_NoWorm)
+#glimpse(MultiF_NoWorm)
 ```
 
 and plot:
@@ -179,7 +179,7 @@ pMultiF_NW<-MultiF_NoWorm %>%
     legend.position = "none")  +
   labs(y="Relative Abundance", x="", title="Worm-")+
   facet_wrap(~Pass)
-pMultiF_NW
+#pMultiF_NW
 ```
 
 Ordinate both data sets together. First merge the data sets:
@@ -199,8 +199,8 @@ MultiLogMergeStand$Pass<-c(NRRLMulti2$Pass, MultiNoWorm$Pass)
 MultiLogMergeStand$Worms<-c(NRRLMulti2$Worms, MultiNoWorm$Worms)
 
 # sanity check structure
-str(MultiLogMergeStand)
-View(MultiLogMergeStand)
+#str(MultiLogMergeStand)
+#View(MultiLogMergeStand)
 ```
 
 Then the ordination:
@@ -344,7 +344,7 @@ pVariantEmergenceRichness_CX<-NRRLMulti2 %>%
   labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: \nChryseobacterium")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
-pVariantEmergenceRichness_CX
+#pVariantEmergenceRichness_CX
 ```
 Filter down to CG only:
 ```{r}
@@ -365,7 +365,7 @@ pVariantEmergenceRichness_CG<-NRRLMulti2 %>%
   labs(y="Richness", x="Pass", title="Emergence of Morphological Variants: \nC. gleum")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
-pVariantEmergenceRichness_CG
+#pVariantEmergenceRichness_CG
 ```
 
 
@@ -943,7 +943,11 @@ ggsave("FigS5_CG_LVGrowthParams_CFU_merge_wilcox.png",
        height=8.5, width=7, units="in", dpi=300)
 ```
 
-## Pairwise in vitro competitions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Pairwise competitions (Figure 2)
+## Pairwise competitions in vitro (no worms)
 Read in the data:
 ```{r}
 NRRL2_CG_Morph_Compete<-read_excel("NRRL2CXMorphologyCompetition.xlsx", sheet="summary")
@@ -998,13 +1002,19 @@ pNRRL2_MorphCompeteInVitro_fAlt<-NRRL2_CG_Morph_Compete %>%
 pNRRL2_MorphCompeteInVitro_fAlt
 ggsave("Figure S6_InVitroTimeSeries.png", width=10, height=8, units="in", dpi=300)
 ```
+While we're here, check the range of the data:
+```{r}
+min(NRRL2_CG_Morph_Compete$fAlt[NRRL2_CG_Morph_Compete$day==14])
+max(NRRL2_CG_Morph_Compete$fAlt[NRRL2_CG_Morph_Compete$day==14])
+```
+
 
 Now we can take the various deltas. Let's start by holding the day 14 data from the pairwise comparisons. We'll add some columns to hold the deltas, then fill them using the strain1 and strain2 labels to find the right data in the other data frames.
 ```{r}
 NRRL2_CG_Morph_Compete_14<-NRRL2_CG_Morph_Compete %>%
   filter(day==14) %>%
   add_column(delta_r=NA, delta_CFU=NA)
-glimpse(NRRL2_CG_Morph_Compete_14)
+#glimpse(NRRL2_CG_Morph_Compete_14)
 ```
 
 Now to grab the deltas. First check out the objects - CFU
@@ -1069,7 +1079,7 @@ pCompeteDeltaGrowth_byORI<-NRRL2_CG_Morph_Compete_14 %>%
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
   labs(y="Change in \nGrowth Rate", x="Fraction Alt Morph", title="")
-pCompeteDeltaGrowth_byORI
+#pCompeteDeltaGrowth_byORI
 ```
  Color by alt morph
 ```{r}
@@ -1091,7 +1101,7 @@ pCompeteDeltaGrowth_byALT<-NRRL2_CG_Morph_Compete_14 %>%
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
   labs(y="Change in \nGrowth Rate", x="Fraction Alt Morph", title="")
-pCompeteDeltaGrowth_byALT
+#pCompeteDeltaGrowth_byALT
 ```
  
 
@@ -1117,7 +1127,7 @@ pCompeteDeltaCFU_byORI<-NRRL2_CG_Morph_Compete_14 %>%
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
   labs(y="Change in \nlog(Max CFU)", x="Fraction Alt Morph", title="")
-pCompeteDeltaCFU_byORI
+#pCompeteDeltaCFU_byORI
 ```
 again, color by alt morph?
 ```{r}
@@ -1139,7 +1149,7 @@ pCompeteDeltaCFU_byALT<-NRRL2_CG_Morph_Compete_14 %>%
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
     legend.text=element_text(size=xTextSize))  +
   labs(y="Change in \nlog(Max CFU)", x="Fraction Alt Morph", title="")
-pCompeteDeltaCFU_byALT
+#pCompeteDeltaCFU_byALT
 ```
 And together:
 ```{r}
@@ -1198,7 +1208,6 @@ pNRRL2_CG_Morph_Compete_d14_Same_small<-NRRL2_CG_Morph_Compete_d14 %>%
        title="In Vitro Competition, Day 14")
   #facet_wrap(~strain2)
 pNRRL2_CG_Morph_Compete_d14_Same_small
-
 ```
 
 Again:
@@ -1312,7 +1321,7 @@ Diagnostics
 plot(pairwise_betar)
 ```
 
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Pairwise competition with worms on plates
 Read in data:
 ```{r}
@@ -1334,10 +1343,10 @@ CG_Compete_PlusWorm$ori<-replace(CG_Compete_PlusWorm$ori,
                                         "WT") 
 
 # reorder levels
-unique(CG_Compete_PlusWorm$alt)
+#unique(CG_Compete_PlusWorm$alt)
 CG_Compete_PlusWorm$alt <-factor(CG_Compete_PlusWorm$alt,
                                         levels=c("A2a10", "F2a10"))
-unique(CG_Compete_PlusWorm$ori)
+#unique(CG_Compete_PlusWorm$ori)
 CG_Compete_PlusWorm$ori <-factor(CG_Compete_PlusWorm$ori,
                                         levels=c("WT", "A1o10", "A2o10",
                                                  "F1o10", "F2o10"))
@@ -1356,7 +1365,6 @@ CG_Compete_PlusWorm %>%
   labs(y="Fraction Alternate Morph", x="Day", title="+Worms",
        linetype="Isolate", color="Alt Morph")+
   facet_grid(vars(ori), vars(dAlt)) # by original morph and starting alt dilution (1:10 or 1:1)
-
 ```
 
 Maybe plot this as a difference map instead of raw data for simplicity?
@@ -1539,7 +1547,9 @@ ggsave("Fig2_CG_Compete.tiff", height=336, width=220, units="mm")
 # full page width = 168 mm
 ```
 
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Motility
 ## Motility in Different Agar Concentrations
 
@@ -1589,7 +1599,7 @@ motility_p35 <- motility_p35 %>%
 Combine to a single data frame
 ```{r}
 motility_agarconc<-rbind(motility_1p5, motility_p5, motility_p35)
-glimpse(motility_agarconc)
+#glimpse(motility_agarconc)
 ```
 
 add columns for Community, Morph, Pass
@@ -1748,8 +1758,9 @@ ancestor_median_1p5<-motility_agarconc_summ$median[motility_agarconc_summ$agar==
 ```
 
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Motility on Soft 0.35% Agar, Passes 5-10
 
-## Motility Diameters, Multiple Passes
 Start with community A data. Read in:
 ```{r}
 motilityA_p35 <- read_excel("CG_motility_all.xlsx", sheet = '.35 As')
@@ -1758,7 +1769,7 @@ motilityA_p35 <- motilityA_p35 %>%
                names_to = "Samples",
                values_to = "Diameter"
                )
-head(motilityA_p35)
+#head(motilityA_p35)
 ```
 
 Create some new columns for labels:
@@ -1774,6 +1785,7 @@ And clean up:
 motilityA_p35<-motilityA_p35 %>%
   mutate(Morph=replace(Morph, Community=="WT", "o")) %>% # ..that WT is original morph
   mutate(Pass=replace(Pass, Community=="WT", 0)) # and is passage 0
+motilityA_p35$Pass<-as.numeric(motilityA_p35$Pass)
 #View(motilityA_p35)
 ```
 
@@ -1781,20 +1793,6 @@ Get rid of missing data:
 ```{r}
 motilityA_p35 <- motilityA_p35[!(is.na(motilityA_p35$Diameter)), ]
 #View(motilityA_p35)
-```
-
-And plot out to confirm data are ok:
-```{r}
-motilityA_p35$Pass<-as.numeric(motilityA_p35$Pass)
-
-motilityA_p35 %>%
-  filter(Community!="WT") %>% 
-  ggplot(aes(x=days, y=Diameter, color=factor(Pass), linetype=factor(isolate)))+
-  geom_line()+
-  geom_point(size=1) + 
-  facet_grid(rows=vars(Community), cols=vars(Pass)) + 
-  labs(title = "Community A, 0.35 agar", linetype = "Isolate", 
-       y="Diameter (cm)", x="Days", color="Pass")
 ```
 
 What time points exist?
@@ -1849,7 +1847,6 @@ rep.35A.day1p8.facet
 ```
 
 
-
 Now the community F data. Read in:
 ```{r}
 motilityF_p35 <- read_excel("CG_motility_all.xlsx", sheet = '.35 Fs')
@@ -1887,22 +1884,8 @@ motilityF_p35 <- motilityF_p35[!(is.na(motilityF_p35$Diameter)), ]
 motilityF_p35<-motilityF_p35 %>%
   mutate(Morph=replace(Morph, Community=="WT", "o")) %>% # ..that WT is original morph
   mutate(Pass=replace(Pass, Community=="WT", 0)) # and is passage 0
-
-#glimpse(motilityF_p35)
-```
-
-And plot out:
-```{r}
 motilityF_p35$Pass<-as.numeric(motilityF_p35$Pass)
-
-motilityF_p35 %>%
-  filter(Community!="WT") %>% 
-  ggplot(aes(x=days, y=Diameter, color=factor(Pass), linetype=factor(isolate)))+
-  geom_line()+
-  geom_point(size=1) + 
-  facet_grid(rows=vars(Community), cols=vars(Pass)) + 
-  labs(title = "Community F, 0.35 agar", linetype = "Isolate", 
-       y="Diameter (cm)", x="Days", color="Pass")
+#glimpse(motilityF_p35)
 ```
 
 What time points exist?
@@ -1963,20 +1946,21 @@ pMultiPassDiameter_AF<-plot_grid(rep.35A.day1p8.facet, rep.35F.day1p8.facet,
 pCGMotilitySummary<-plot_grid(pmotility_agarconc_LastDay, 
                               pMultiPassDiameter_AF,
                               ncol=1, rel_heights=c(1,0.9), labels=c("A", ""))
-#pCGMotilitySummary<-plot_grid(plswarm_MultAgar_LastDay, 
-#                              rep.35A.day1p8.facet, rep.35F.day1p8.facet,
-#                              ncol=3, rel_widths=c(1, 0.4, 0.5), labels="AUTO")
 
 pCGMotilitySummary
 
-#ggsave("Fig3_pCGMotilitySummary.png", width=10, height=8, units="in", dpi=400)
-ggsave("Fig3_pCGMotilitySummary.tiff", width=228, height=152, units="mm")
+ggsave("FigS8_pCGMotilitySummary.png", width=10, height=8, units="in", dpi=400)
+#ggsave("FigS8_pCGMotilitySummary.tiff", width=228, height=152, units="mm")
 # 2/3 page 114 mm width
 ```
 
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-## Swarm Diameters, Nutrient Concentration Varied
+# Motility in Varying Nutrient Concentration
+## Community F, NGM 0.2-4X
 2023-05-18. Isolates were colonies (n=3) of original or alternate morph picked from a new streak-out of the worm digest glycerol stock of community F2 pass 6. Grew overnight in 1 mL LB, spun down 900 uL for 2 min at 8000xg, and resuspended in same vol of liquid NGM 0.25X peptone. From these, constructed 10^8 stocks in the correct liquid NGM, and dispensed in triplicate as 150 uL into 96 well plate (technical replicates from each stock). Plate was covered with BreatheEasy and moved to 25C with shaking for 6 hours. Plates were poured and cooled to standard specs, then inoculated with 1 uL in the center of the plate.
 
 Note that there were no ancestor controls here - we are instead comparing across nutrient densities. Also note that I am using isolate IDs 1-3 for convenience; these are F2o6 #5-7 and F2a6 #7-9.
@@ -2107,7 +2091,8 @@ nd_diam_summary_F <- nd_diam_F %>%
 View(nd_diam_summary_F)
 ```
 
-#### Community A data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Community A, NGM 0.2-4X
 Also pass 6, this time with ancestor and with some extra dilutions. Rows E-G are 10X serial dilutions of the corresponding wells in row A.
 
 First, read in data:
@@ -2350,8 +2335,8 @@ nd_diam_summary_A <- nd_diam_A %>%
 #View(nd_diam_summary_A)
 ```
 
-
-#### Combining the data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Combining the data
 Let's put the F2 and A2 nutrient data sets together
 ```{r}
 temp1<-nd_diam_A %>%
@@ -2433,7 +2418,9 @@ p_nd_diam_lmlines_log_short  +
 ggsave("Fig4_NutrientMotility.tiff", width=240, height=180, units="mm")
 # one column 80 mm width
 ```
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Statistics for NGM 0.2-4X Data
+### Set 1: Constant Inoculum
 Statistics for panels A-B, comparing across morphs, communities, and peptone concentrations for a fixed inoculum density. For simplicity we transform the data so the fit is linear:
 ```{r}
 nd_diam<-nd_diam %>%
@@ -2566,6 +2553,8 @@ nd_diam_model_slope_alt_full<-nd_diam_slope %>%
   lm(slope~logtime + Peptone + Community, data=.)
 summary(nd_diam_model_slope_alt_full)
 ```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Set 2: Inoculum Dilutions
 Now statistics for the diluted inoculum data. For simplicity we filter & transform the data so the fit is linear:
 ```{r}
 nd_diam_A_dilutions<-nd_diam_A %>%
@@ -2657,11 +2646,11 @@ temp2<-lm(slope ~ Peptone, data=nd_diam_A_slope_dilutions_o)
 lrtest(temp, temp2)
 ```
 
-
-### Growth rates and colony expansion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Growth parameters and colony expansion
 I also want to know what the relationship is between growth rate in the media and expansion rate on agar surfaces. 
 
-#### Community F pass 6
+### Community F pass 6
 Read in the growth data for the F6 isolates (5-point rolling average):
 ```{r}
 plate_nutrient <- read_excel("20230518_NV_CG_NGM_25C.xlsx", sheet = "raw")
@@ -2751,7 +2740,6 @@ par(mfrow=c(7,8))
 par(mar = c(2.5, 4, 2, 1))
 plot(plate_nutrient_manyspline)
 ```
-Alt morphs are just.. odd. Are they clumping?
 
 Now that we have these fits, let's extract the parameters. 
 ```{r}
@@ -3112,12 +3100,6 @@ lm_nd_diam_slope_rate_ALT<-lm(spreadrate~K, data=nd_rate_temp_F)
 summary(lm_nd_diam_slope_rate_ALT_F)
 ```
 
-
-Let's assemble the figures. First the raw data:
-```{r}
-plot_grid(p_nd_diam_F, p_nd_diam_slope_F, ncol=1, labels="AUTO")
-#ggsave("pNutrientColonyDiameter_F.png", width=8, height=8, units="in", dpi=300)
-```
 
 #### Community A pass 6
 Read in the growth data for the F6 isolates (5-point rolling average):
@@ -3637,25 +3619,28 @@ p_spread_mumax
 ```
 
 
-
-Then the rates:
 ```{r}
-plot_grid(pLVparams_spline_r_box_nutrient + stat_compare_means(label.y.npc = c(0.28, 0.9, 1.1)), 
+pLVparams_spline_K_box_nutrient + stat_compare_means(label.y.npc = c(0.28, 0.65, 1.1, 0.29, 0.65, 1.1), 
+                                                     label.x.npc = "centre",
+                                                     aes(label = paste0("p = ", after_stat(p.format))))
+```
+
+
+Combine plots:
+```{r}
+p1<-plot_grid(pLVparams_spline_r_box_nutrient + stat_compare_means(label.y.npc = c(0.28, 0.9, 1.1),
+                                                     label.x.npc = "centre",
+                                                     aes(label = paste0("p = ", after_stat(p.format)))), 
           p_diam_mumax, p_spread_mumax,
           ncol=1, labels="AUTO", rel_heights = c(1, 0.7, 0.7))
-ggsave("FigS9_pDiameterRates.png", width=8, height=10, units="in", dpi=300)
-```
-
-Same for K:
-```{r}
-plot_grid(pLVparams_spline_K_box_nutrient + stat_compare_means(label.y.npc = c(0.28, 0.6, 1.1)), 
+#p1
+p2<-plot_grid(pLVparams_spline_K_box_nutrient + stat_compare_means(label.y.npc = c(0.28, 0.65, 1.1, 0.29, 0.65, 1.1), 
+                                                     label.x.npc = "centre",
+                                                     aes(label = paste0("p = ", after_stat(p.format)))), 
           p_diam_K, p_spread_K,
-          ncol=1, labels="AUTO", rel_heights=c(1, 0.7, 0.7))
-ggsave("FigS10_pDiameterVsK.png", width=8, height=10, units="in", dpi=300)
+          ncol=1, labels=c("D", "E", "F"), rel_heights=c(1, 0.7, 0.7))
+p1|p2
+ggsave("FigS9_pGrowthParams_Motility.png", width=14, height=10, units="in", dpi=300)
 ```
-
-
-## Resources
-https://hansjoerg.me/2019/05/10/regression-modeling-with-proportion-data-part-1/
 
 
