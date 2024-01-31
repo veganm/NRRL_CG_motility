@@ -30,7 +30,7 @@ First, load the necessary:
 # vegan 2.6-4
 # MASS 7.3-60
 pacman::p_load(tidyverse, cowplot, vegan, FactoMineR, readxl, ggpubr, MASS, RColorBrewer,
-               readxl, growthrates, growthcurver, patchwork, betareg, lmtest, lme4)
+               readxl, growthrates, growthcurver, patchwork, betareg, lmtest, lme4, jpeg, magick, ggimage)
 ```
  
 Define global:
@@ -117,7 +117,7 @@ pMultiF<-MultiF %>%
     legend.title=element_blank(),
     strip.text=element_text(size=xTextSize+4),
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
-    legend.text=element_text(size=xTextSize+2),
+    legend.text=element_text(size=xTextSize),
     #legend.position = "none")  
     )+
   labs(y="Relative Abundance", x="", title="Worm+")+
@@ -175,11 +175,12 @@ pMultiF_NW<-MultiF_NoWorm %>%
     strip.text=element_text(size=xTextSize+4),
     #legend.title=element_blank(),
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
-    #legend.text=element_text(size=xTextSize),
-    legend.position = "none")  +
+    #legend.text=element_text(size=xTextSize)
+    legend.position = "none"
+    )  +
   labs(y="Relative Abundance", x="", title="Worm-")+
   facet_wrap(~Pass)
-#pMultiF_NW
+pMultiF_NW
 ```
 
 Ordinate both data sets together. First merge the data sets:
@@ -299,11 +300,13 @@ NRRLMulti2<-NRRLMulti2 %>%
 max(NRRLMulti2$varTotal) #nope - at most one kind of variant per community*replicate
 ```
 
+
 Plot Fig 1 with the joint ordination
 ```{r}
 plot_grid(pMultiPlotsTop_Merge, pVariantEmergenceHeat, ncol=1, rel_heights = c(2,1), labels=c("", "D"))
 #ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.png", width=10, height=12, units="in", dpi=400)
-ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.tiff", width=240, height=275, units="mm")
+#ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.tiff", width=240, height=275, units="mm")
+ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.eps", width=240, height=275, units="mm")
 # 2/3 page width is 114 mm - supplied at 2X size
 ```
 
@@ -1949,8 +1952,8 @@ pCGMotilitySummary<-plot_grid(pmotility_agarconc_LastDay,
 
 pCGMotilitySummary
 
-ggsave("FigS8_pCGMotilitySummary.png", width=10, height=8, units="in", dpi=400)
-#ggsave("FigS8_pCGMotilitySummary.tiff", width=228, height=152, units="mm")
+#ggsave("Fig3_pCGMotilitySummary.png", width=10, height=8, units="in", dpi=400)
+ggsave("Fig3_pCGMotilitySummary.tiff", width=228, height=152, units="mm")
 # 2/3 page 114 mm width
 ```
 
@@ -2289,9 +2292,10 @@ p_nd_diam_slope_A_dilutions<-nd_diam_slope_A %>%
   scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
     scale_shape_manual(values=c(15, 16, 18))+
+    scale_x_continuous(breaks = seq(20, 60, by = 10)) +
   ylim(-0.05, 0.15)+
   labs(title="", x="Time (h)", y="Expansion (cm/h)", color="Morph", pch="Peptone", linetype="Peptone") +
-  theme(text = element_text(size = xTextSize),
+  theme(text = element_text(size = xTextSize-2),
         axis.text.x = element_text(angle=90)) +
   #facet_grid(vars(Dilution), vars(Peptone), scales="free_y")
   facet_wrap(~Dilution, nrow=1)
@@ -2308,8 +2312,9 @@ p_nd_diam_A_dilutions<-nd_diam_A %>%
   scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
     scale_shape_manual(values=c(15, 16, 18))+
+    scale_x_continuous(breaks = seq(10, 60, by = 10)) +
   geom_smooth(method="lm", formula = y ~ log(x), fill="NA", linewidth=0.7)+
-    theme(text = element_text(size = xTextSize),
+    theme(text = element_text(size = xTextSize-2),
           axis.text.x = element_text(angle=90)) +
   labs(title="", x="Time (h)", y="Diameter (cm)", color="Morph",
        pch="Peptone", linetype="Peptone") +
@@ -2363,9 +2368,10 @@ p_nd_diam_lmlines_log_short<-nd_diam %>%
     #scale_color_manual(values=c("red2", "darkblue")) +
   scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
     scale_shape_manual(values=c(15, 16, 18))+
+    scale_x_continuous(breaks = seq(10, 60, by = 10)) +
   labs(title="", x="Time (h)", y="Diameter (cm)", 
        color="Morph", pch="Peptone", linetype="Peptone") +
-  theme(text = element_text(size = xTextSize),
+  theme(text = element_text(size = xTextSize-2),
         axis.text.x = element_text(angle=90)) +
   facet_wrap(~Community, scales="free_x")
 p_nd_diam_lmlines_log_short
@@ -2396,9 +2402,10 @@ p_nd_diam_slope_lmlines_log_short<-nd_diam_slope %>%
   scale_colour_viridis_d(begin=0.4, end=0.75, option="inferno")+
   scale_linetype_manual(values=c("solid", "dashed", "dotted"))+
   scale_shape_manual(values=c(15, 16, 18))+
+  scale_x_continuous(breaks = seq(20, 60, by = 10)) +
   labs(title="", x="Time (h)", y="Expansion (cm/h)", 
        color="Morph", linetype="Peptone", pch="Peptone") +
-  theme(text = element_text(size = xTextSize),
+  theme(text = element_text(size = xTextSize-2),
         axis.text.x = element_text(angle=90)) +
   facet_wrap(~Community, scales="free_x")
 p_nd_diam_slope_lmlines_log_short
@@ -2411,13 +2418,15 @@ p_nd_diam_lmlines_log_short  +
   p_nd_diam_A_dilutions +
   p_nd_diam_slope_A_dilutions +
   plot_annotation(tag_levels = 'A') +
-       plot_layout(guides = 'collect')
+       plot_layout(guides = 'collect') 
 
 
-#ggsave("Fig3_NutrientMotility.png", width=12, height=7, units="in", dpi=400)
-ggsave("Fig3_NutrientMotility.tiff", width=240, height=180, units="mm")
+#ggsave("Fig4_NutrientMotility.png", width=12, height=7, units="in", dpi=400)
+ggsave("Fig4_NutrientMotility.tiff", width=240, height=150, units="mm")
 # one column 80 mm width
 ```
+
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Statistics for NGM 0.2-4X Data
 ### Set 1: Constant Inoculum
