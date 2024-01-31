@@ -30,7 +30,7 @@ First, load the necessary:
 # vegan 2.6-4
 # MASS 7.3-60
 pacman::p_load(tidyverse, cowplot, vegan, FactoMineR, readxl, ggpubr, MASS, RColorBrewer,
-               readxl, growthrates, growthcurver, patchwork, betareg, lmtest, lme4, jpeg, magick, ggimage)
+               readxl, growthrates, growthcurver, patchwork, betareg, lmtest, lme4)
 ```
  
 Define global:
