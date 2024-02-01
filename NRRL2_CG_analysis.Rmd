@@ -389,7 +389,8 @@ pVariantEmergenceH_CG<-NRRLMulti2 %>%
         axis.title=element_text(size=xTextSize),
         plot.title=element_text(hjust=0.5, size=xTextSize) 
   )+
-  labs(y="Shannon H'", x="Pass", title="C. gleum")+
+#  labs(y="Shannon H'", x="Pass", title="C. gleum")+
+    labs(y="Shannon H'", x="Pass", title="")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
 #pVariantEmergenceH_CG
@@ -408,7 +409,8 @@ pVariantEmergenceIS_CG<-NRRLMulti2 %>%
         axis.title=element_text(size=xTextSize),
         plot.title=element_text(hjust=0.5, size=xTextSize) 
   )+
-  labs(y="Inverse Simpson", x="Pass", title="C. gleum")+
+#  labs(y="Inverse Simpson", x="Pass", title="C. gleum")+
+    labs(y="Inverse Simpson", x="Pass", title="")+
   #facet_wrap(~Variant, ncol=1)+
   theme(strip.text=element_text(size=xTextSize, face="italic"))
 #pVariantEmergenceIS_CG
@@ -462,11 +464,15 @@ pVariantEmergenceIS_MO<-NRRLMulti2 %>%
   theme(strip.text=element_text(size=xTextSize, face="italic"))
 #pVariantEmergenceIS_MO
 
-plot_grid(pVariantEmergenceRichness_CG, pVariantEmergenceRichness_MO,
-          pVariantEmergenceH_CG, pVariantEmergenceH_MO, 
-          pVariantEmergenceIS_CG, pVariantEmergenceIS_MO,
-          ncol=2, align="h")
-ggsave("FigS3_EmergenceMorphVariants.png", height=6, width=8, units="in", dpi=300)
+#plot_grid(pVariantEmergenceRichness_CG, pVariantEmergenceRichness_MO,
+#          pVariantEmergenceH_CG, pVariantEmergenceH_MO, 
+#          pVariantEmergenceIS_CG, pVariantEmergenceIS_MO,
+#          ncol=2, align="h")
+plot_grid(pVariantEmergenceRichness_CG,
+          pVariantEmergenceH_CG,
+          pVariantEmergenceIS_CG,
+          ncol=1, align="v")
+ggsave("FigS3_EmergenceMorphVariants.png", height=6, width=4, units="in", dpi=300)
 ```
 
 Calculate median diversity across samples at each passage:
