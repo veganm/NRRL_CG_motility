@@ -238,9 +238,9 @@ pPCAMNW_Merge
 merge some plots:
 ```{r}
 pMultiPlotsTop_Merge_BC<-plot_grid(pMultiF_NW, pMultiF,
-                          rel_widths=c(1, 1.2), labels=c("B", "C"))
-pMultiPlotsTop_Merge<-plot_grid(pPCAMNW_Merge, pMultiPlotsTop_Merge_BC,
-                                ncol=1, rel_heights=c(0.9,1), labels=c("A", ""))
+                          rel_widths=c(1, 1.2), labels=c("C", "D"))
+pMultiPlotsTop_Merge<-plot_grid(NULL, pPCAMNW_Merge, pMultiPlotsTop_Merge_BC,
+                                ncol=1, rel_heights=c(0.6, 1, 1), labels=c("A", "B", ""))
 pMultiPlotsTop_Merge
 ```
 
@@ -303,10 +303,14 @@ max(NRRLMulti2$varTotal) #nope - at most one kind of variant per community*repli
 
 Plot Fig 1 with the joint ordination
 ```{r}
-plot_grid(pMultiPlotsTop_Merge, pVariantEmergenceHeat, ncol=1, rel_heights = c(2,1), labels=c("", "D"))
+pMultiPlotsBottom<-plot_grid(pVariantEmergenceHeat, NULL, NULL, ncol=1, 
+                             rel_heights=c(1.8,1,0.1),
+                             labels=c("E", "F",""))
+plot_grid(pMultiPlotsTop_Merge, pMultiPlotsBottom, ncol=2,
+          rel_widths = c(1, 0.9))
 #ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_ivory1_grey80.png", width=10, height=12, units="in", dpi=400)
-#ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.tiff", width=240, height=275, units="mm")
-ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.eps", width=240, height=275, units="mm")
+ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.tiff", width=338, height=200, units="mm")
+#ggsave("pFig1_Multispecies_AllPassSummary_Merge_Heat_grey99_blackfill.eps", width=240, height=275, units="mm")
 # 2/3 page width is 114 mm - supplied at 2X size
 ```
 
