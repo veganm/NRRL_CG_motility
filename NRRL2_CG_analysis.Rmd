@@ -130,14 +130,14 @@ pMultiF<-temp %>%
                                'mediumorchid1' # ST, 463, #E066FF
                                )) + 
   theme(
-    axis.text=element_text(size=xTextSize+2), 
+    axis.text=element_text(size=xTextSize+1), 
     axis.title=element_text(size=xTextSize+2),
     axis.text.x=element_blank(),
     axis.ticks = element_blank(),
     legend.title=element_blank(),
     strip.text=element_text(size=xTextSize+4),
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
-    legend.text=element_text(size=xTextSize),
+    legend.text=element_text(size=xTextSize-2),
     #legend.position = "none")  
     )+
   labs(y="", x="", title="Worm+")+
@@ -197,7 +197,7 @@ pMultiF_NW<-temp2 %>%
                                'mediumorchid1' # ST, 463, #E066FF
                                )) + 
   theme(
-    axis.text=element_text(size=xTextSize+2), 
+    axis.text=element_text(size=xTextSize+1), 
     axis.title=element_text(size=xTextSize+2),
     axis.text.x=element_blank(),
     axis.ticks = element_blank(),
@@ -255,7 +255,7 @@ pPCAMNW_Merge<-pcaMNW_Merge.top2 %>%
   scale_color_viridis_d()+
   theme(axis.text=element_text(size=xTextSize+2), 
         axis.title=element_text(size=xTextSize+2),
-        legend.text=element_text(size=xTextSize+2),
+        legend.text=element_text(size=xTextSize),
         strip.text=element_text(size=xTextSize+4),
         #plot.title=element_text(hjust=0.5, size=myTextSize+2),
         legend.title = element_text(size=xTextSize+2)) + 
@@ -267,7 +267,7 @@ pPCAMNW_Merge
 merge some plots:
 ```{r}
 pMultiPlotsTop_Merge_BC<-plot_grid(pMultiF_NW, pMultiF,
-                          rel_widths=c(1, 1.2), labels=c("C", "D"))
+                          rel_widths=c(1, 1.3), labels=c("C", "D"))
 pMultiPlotsTop_Merge<-plot_grid(NULL, pPCAMNW_Merge, pMultiPlotsTop_Merge_BC,
                                 ncol=1, rel_heights=c(0.6, 1, 1), labels=c("A", "B", ""))
 pMultiPlotsTop_Merge
