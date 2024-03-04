@@ -1677,6 +1677,12 @@ motility_agarconc<-motility_agarconc %>%
   filter(ID!="2 A2o6")
 ```
 
+Reorder pass as factor:
+```{r}
+motility_agarconc$Pass<-factor(motility_agarconc$Pass, levels=c("0", "6", "10"))
+```
+
+
 Plot out last time only:
 ```{r}
 # and plot
@@ -1713,14 +1719,11 @@ motility_agarconc_lasttime<-motility_agarconc %>%
   mutate(Morph=recode(Morph, "a"="Alternate", "o"="Original"))
 
 motility_agarconc_lasttime_35<-motility_agarconc_lasttime %>%
-  filter(agar==0.35) %>%
-  mutate(Pass=as.factor(Pass))
+  filter(agar==0.35) 
 motility_agarconc_lasttime_5<-motility_agarconc_lasttime %>%
-  filter(agar==0.5)%>%
-  mutate(Pass=as.factor(Pass))
+  filter(agar==0.5)
 motility_agarconc_lasttime_1p5<-motility_agarconc_lasttime %>%
-  filter(agar==1.5)%>%
-  mutate(Pass=as.factor(Pass))
+  filter(agar==1.5)
 ```
 
 Test for pass as factor.
@@ -1756,9 +1759,9 @@ kruskal.test(Diameter~Community, data=temp)
 
 Alternate vs original morphs
 ```{r}
-
 wilcox.test(Diameter~Morph, data=motility_agarconc_lasttime_35)
 ```
+
 ```{r}
 wilcox.test(Diameter~Morph, data=motility_agarconc_lasttime_5)
 ```
