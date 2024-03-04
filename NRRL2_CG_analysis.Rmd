@@ -80,35 +80,55 @@ NRRLMulti2<-read_excel("ExperimentalEvolutionPlateData.xlsx", sheet="Multispecie
 names(NRRLMulti2)
 ```
 
-Create stacked bar plots of relative abundance of the seven genera:
+Re-parse species names using community IDs
 ```{r}
-# make stacked bar plots
-NRRLMulti2$Total<-rowSums(NRRLMulti2[,5:11])
-fAA<-NRRLMulti2$AA/NRRLMulti2$Total 
-fMO<-NRRLMulti2$MO/NRRLMulti2$Total 
-fRE<-NRRLMulti2$RE/NRRLMulti2$Total 
-fBS<-NRRLMulti2$BS/NRRLMulti2$Total 
-fOA<-NRRLMulti2$OA/NRRLMulti2$Total 
-fCX<-NRRLMulti2$CX/NRRLMulti2$Total 
-fSX<-NRRLMulti2$SX/NRRLMulti2$Total 
+# declare sets containing each bacterial species
+hasRE15D<-c("A", "B", "C", "D")
+hasRE15M<-c("E", "F", "G", "H")
+hasRE16<-c("I", "J", "K", "L")
+hasCG<-c("A", "B", "E", "F", "I", "J")
+hasST<-c("B", "D", "F", "H", "J", "L")
 
-values<-c(fAA,fMO,fRE,fBS,fOA,fCX,fSX) 
-mylen<-length(fAA)
-bact<-c(rep("AA",mylen), rep("MO",mylen), rep("RE",mylen), rep("BS",mylen), rep("OA",mylen), rep("CX",mylen), rep("SX",mylen)) 
-MultiF<-data.frame(Pass=NRRLMulti2$Pass, 
-                   ID=NRRLMulti2$ID, 
-                   Set=NRRLMulti2$Set, 
-                   Rep=NRRLMulti2$Rep, 
-                   bact, values)
-MultiF<-as_tibble(MultiF)
-#glimpse(MultiF)
+# pivot and assign
+temp<-NRRLMulti2 %>%
+  dplyr::select(!(varMO:varCX)) %>%
+  pivot_longer(cols=AA:SX, names_to="Species", values_to="CFU")
 
-# plot
-pMultiF<-MultiF %>%
+temp$Species[temp$Species=="RE" & temp$Set %in% hasRE15D]<-"RE15D"
+temp$Species[temp$Species=="RE" & temp$Set %in% hasRE15M]<-"RE15M"
+temp$Species[temp$Species=="RE" & temp$Set %in% hasRE16]<-"RE16"
+temp$Species[temp$Species=="CX"]<-"CI"
+temp$Species[temp$Species=="CI" & temp$Set %in% hasCG]<-"CG"
+temp$Species[temp$Species=="SX"]<-"SS"
+temp$Species[temp$Species=="SS" & temp$Set %in% hasST]<-"ST"
+#temp
+```
+
+Create stacked bar plots of relative abundance for all species:
+```{r}
+#   scale_fill_manual(values=c('red4', 'orangered', 'gold', 'yellowgreen', 'darkgreen', 'blue', 'purple')) # old scale 
+
+pMultiF<-temp %>%
   filter(Pass=="1" | Pass=="5" | Pass=="10") %>% # we don't need to see ALL of these surely
-  ggplot(aes(fill=bact, y=values, x=ID))+ 
-  geom_bar(stat="identity") + 
-  scale_fill_manual(values=c('red4', 'orangered', 'gold', 'yellowgreen', 'darkgreen', 'blue', 'purple')) + 
+  ggplot(aes(x=ID, y=CFU, fill=factor(Species))) +
+  geom_bar(position="fill", stat="identity") +
+  scale_fill_manual(values=c('red4',       #AA
+                               'orangered',   #BS, 503 
+                               'darkorange2',    # CG, 92, #EE7600
+                               #'gold',        # CX, 142, #FFD700
+                               'goldenrod2',   # CI, 149, #EEB422
+                               #'yellowgreen',  # MO, 657 #9ACD32
+                               #'darkgreen',    # OA, 85, #006400
+                               'darkgreen',    # MO, 85, #006400
+                               'darkolivegreen3',        # OA, 88, #A2CD5A
+                               #'blue',        # RE, 26, #0000FF
+                               'turquoise2',   # RE15D, 637, #00E5EE
+                               'deepskyblue',  # RE15M, 121, #00BFFF
+                               'blue',         # RE16, 26, #0000FF
+                               #'purple'       # SX, 547, #A020F0
+                               'purple',        # SS
+                               'mediumorchid1' # ST, 463, #E066FF
+                               )) + 
   theme(
     axis.text=element_text(size=xTextSize+2), 
     axis.title=element_text(size=xTextSize+2),
@@ -120,9 +140,9 @@ pMultiF<-MultiF %>%
     legend.text=element_text(size=xTextSize),
     #legend.position = "none")  
     )+
-  labs(y="Relative Abundance", x="", title="Worm+")+
-  facet_wrap(~Pass)
-#pMultiF
+  labs(y="", x="", title="Worm+")+
+  facet_wrap(~Pass) 
+pMultiF
 ```
 
 Read in the community composition data from the no-worm evolution experiment:
@@ -136,50 +156,59 @@ MultiNoWorm$Rep<-as.numeric(substr(MultiNoWorm$ID,2,2))
 MultiNoWorm<-MultiNoWorm %>% relocate(ID, Set)
 #glimpse(MultiNoWorm)
 ```
-make stacked bar plots of relative abundance:
-```{r}
-# make the stacked barplots
-fNAA<-MultiNoWorm$AA/MultiNoWorm$Total 
-fNMO<-MultiNoWorm$MO/MultiNoWorm$Total 
-fNRE<-MultiNoWorm$RE/MultiNoWorm$Total 
-fNBS<-MultiNoWorm$BS/MultiNoWorm$Total 
-fNOA<-MultiNoWorm$OA/MultiNoWorm$Total 
-fNCX<-MultiNoWorm$CX/MultiNoWorm$Total 
-fNSX<-MultiNoWorm$SX/MultiNoWorm$Total 
 
-values<-c(fNAA, fNMO, fNRE, fNBS, fNOA, fNCX, fNSX)
-mylen2<- length(fNAA)
-bact<-c(rep("AA",mylen2), rep("MO",mylen2), rep("RE",mylen2), rep("BS",mylen2), rep("OA",mylen2), rep("CX",mylen2), rep("SX",mylen2))  
-MultiF_NoWorm<-data.frame(Pass=MultiNoWorm$Pass, 
-                   ID=MultiNoWorm$ID, 
-                   Set=MultiNoWorm$Set, 
-                   Rep=MultiNoWorm$Rep, 
-                   bact, values)
-MultiF_NoWorm<-as_tibble(MultiF_NoWorm)
-#glimpse(MultiF_NoWorm)
+Re-label species full IDs:
+```{r}
+temp2<-MultiNoWorm %>%
+  dplyr::select(!Total) %>%
+  pivot_longer(cols=AA:SX, names_to="Species", values_to="CFU")
+
+temp2$Species[temp2$Species=="RE" & temp2$Set %in% hasRE15D]<-"RE15D"
+temp2$Species[temp2$Species=="RE" & temp2$Set %in% hasRE15M]<-"RE15M"
+temp2$Species[temp2$Species=="RE" & temp2$Set %in% hasRE16]<-"RE16"
+temp2$Species[temp2$Species=="CX"]<-"CI"
+temp2$Species[temp2$Species=="CI" & temp2$Set %in% hasCG]<-"CG"
+temp2$Species[temp2$Species=="SX"]<-"SS"
+temp2$Species[temp2$Species=="SS" & temp2$Set %in% hasST]<-"ST"
+temp2
 ```
 
-and plot:
+Stacked bar plot:
 ```{r}
-# plot out no-worm communities barplots
-pMultiF_NW<-MultiF_NoWorm %>%
+pMultiF_NW<-temp2 %>%
   filter(Pass=="1" | Pass=="5" | Pass=="10") %>% # we don't need to see ALL of these surely
-  ggplot(aes(fill=bact, y=values, x=ID))+ 
-  geom_bar(stat="identity") + 
-  scale_fill_manual(values=c('red4', 'orangered', 'gold', 'yellowgreen', 'darkgreen', 'blue', 'purple')) + 
+  ggplot(aes(x=ID, y=CFU, fill=factor(Species))) +
+  geom_bar(position="fill", stat="identity") +
+  scale_fill_manual(values=c('red4',       #AA
+                               'orangered',   #BS, 503 
+                               'darkorange2',    # CG, 92, #EE7600
+                               #'gold',        # CX, 142, #FFD700
+                               'goldenrod2',   # CI, 149, #EEB422
+                               #'yellowgreen',  # MO, 657 #9ACD32
+                               #'darkgreen',    # OA, 85, #006400
+                               'darkgreen',    # MO, 85, #006400
+                               'darkolivegreen3',        # OA, 88, #A2CD5A
+                               #'blue',        # RE, 26, #0000FF
+                               'turquoise2',   # RE15D, 637, #00E5EE
+                               'deepskyblue',  # RE15M, 121, #00BFFF
+                               'blue',         # RE16, 26, #0000FF
+                               #'purple'       # SX, 547, #A020F0
+                               'purple',        # SS
+                               'mediumorchid1' # ST, 463, #E066FF
+                               )) + 
   theme(
     axis.text=element_text(size=xTextSize+2), 
     axis.title=element_text(size=xTextSize+2),
     axis.text.x=element_blank(),
     axis.ticks = element_blank(),
-    strip.text=element_text(size=xTextSize+4),
     #legend.title=element_blank(),
+    strip.text=element_text(size=xTextSize+4),
     plot.title=element_text(hjust=0.5, size=xTextSize+2, face="bold"), 
-    #legend.text=element_text(size=xTextSize)
-    legend.position = "none"
-    )  +
+    #legend.text=element_text(size=xTextSize),
+    legend.position = "none"  
+    )+
   labs(y="Relative Abundance", x="", title="Worm-")+
-  facet_wrap(~Pass)
+  facet_wrap(~Pass) 
 pMultiF_NW
 ```
 
